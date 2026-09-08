@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>oke</title>
+</head>
+<body>
+    <!-- Modal Pilih Komoditas -->
+            <div id="plantModal" class="modal-overlay">
+                <div class="modal-content plant-modal-box">
+                    <div class="modal-header" style="text-align: left; margin-bottom: 20px;">
+                        <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;"><i data-feather="target"></i> Pilih Komoditas</h2>
+                        <p style="margin: 0;">Pilih tanaman target untuk dianalisis kecocokannya dengan lahan.</p>
+                        <button type="button" class="btn-close-modal" onclick="closePlantModal()"><i data-feather="x"></i></button>
+                    </div>
+                    
+                    <div class="plant-grid-container">
+                        <button type="button" class="btn-reset-plant" onclick="selectPlant('umum', '-- Pilih Tanaman Target --')">
+                            <i data-feather="refresh-ccw"></i> Kosongkan Pilihan (Kembali ke Umum)
+                        </button>
+                        <div class="plant-category">
+                            <h4>Hortikultura (Sayur & Buah)</h4>
+                            <div class="plant-grid">
+                                <div class="plant-card" onclick="selectPlant('cabai', 'Cabai Merah')">Cabai Merah</div>
+                                <div class="plant-card" onclick="selectPlant('tomat', 'Tomat')">Tomat</div>
+                                <div class="plant-card" onclick="selectPlant('bawang', 'Bawang Merah')">Bawang Merah</div>
+                            </div>
+                        </div>
+                        <div class="plant-category">
+                            <h4>Hortikultura (Sayuran Daun)</h4>
+                            <div class="plant-grid">
+                                <div class="plant-card" onclick="selectPlant('bayam', 'Bayam')">Bayam</div>
+                                <div class="plant-card" onclick="selectPlant('kangkung', 'Kangkung')">Kangkung</div>
+                                <div class="plant-card" onclick="selectPlant('sawi', 'Sawi (Caisim)')">Sawi (Caisim)</div>
+                                <div class="plant-card" onclick="selectPlant('selada', 'Selada')">Selada</div>
+                                <div class="plant-card" onclick="selectPlant('kubis', 'Kubis')">Kubis</div>
+                            </div>
+                        </div>
+                        <div class="plant-category">
+                            <h4>Pangan & Palawija</h4>
+                            <div class="plant-grid">
+                                <div class="plant-card" onclick="selectPlant('padi', 'Padi Sawah')">Padi Sawah</div>
+                                <div class="plant-card" onclick="selectPlant('jagung', 'Jagung Manis')">Jagung Manis</div>
+                                <div class="plant-card" onclick="selectPlant('singkong', 'Singkong')">Singkong</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</body>
+</html>

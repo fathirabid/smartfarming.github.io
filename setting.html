@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | Smart Farming Web</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <a href="index.html" class="logo-link">
+                    <div class="logo"><span class="icon">🌿</span>
+                        <span class="text">Smart Farming</span>
+                    </div>
+                </a>
+                
+                <div class="datetime-wrapper">
+                    <div id="clock">00:00:00</div>
+                    <div id="date">Memuat tanggal...</div>
+                </div>
+
+                <nav>
+                    <a href="index.html"><i data-feather="grid"></i> Dashboard</a>
+                    <a href="history.html"><i data-feather="activity"></i> History</a>
+                    <a href="mapping.html"><i data-feather="map"></i> Mapping</a>
+                    <a href="setting.html" class="active"><i data-feather="settings"></i> Settings</a>
+                </nav>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div id="guest-view">
+                    <button onclick="showLogin()" class="btn-login-main">
+                        <i data-feather="user"></i><span>Masuk Admin</span>
+                    </button>
+                </div>
+                <div id="admin-view" style="display: none;">
+                    <div class="user-profile">
+                        <div class="avatar"><img src="images/icon-4399701_1280.png" alt="User"></div>
+                        <div class="user-info"><span class="user-name">Akun Admin</span><span class="user-status">Online</span></div>
+                    </div>
+                    <button onclick="handleLogout()" class="btn-logout">
+                        <i data-feather="log-out"></i><span>Keluar Sistem</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="loginModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>🌿 Admin Login</h2>
+                        <p>Gunakan akun admin untuk akses sistem</p>
+                    </div>
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="username-wrapper">
+                                <input type="text" id="loginUser" placeholder="Masukkan Username" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="loginPass" placeholder="Masukkan Password" required>
+                                <button type="button" id="togglePassword" class="toggle-btn">
+                                    <i data-feather="eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">Masuk Sekarang</button>
+                        <button type="button" onclick="closeLogin()" class="btn-cancel">Batal</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="logoutModal" class="modal-overlay">
+                <div class="modal-content logout-box">
+                    <div class="modal-header">
+                        <div class="icon-warning">⚠️</div>
+                        <h2>Konfirmasi Keluar</h2>
+                        <p>Apakah Anda yakin ingin mengakhiri sesi admin dan keluar dari sistem?</p>
+                    </div>
+                    <div class="modal-footer-btns">
+                        <button type="button" onclick="confirmLogout()" class="btn-confirm-logout">Ya, Keluar</button>
+                        <button type="button" onclick="closeLogoutModal()" class="btn-cancel">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="statusModal" class="modal-overlay">
+                <div class="modal-content status-box">
+                    <div id="statusIcon" class="status-icon"></div>
+                    <h2 id="statusTitle"></h2>
+                    <p id="statusMessage"></p>
+                    <div class="loader-line"></div> 
+                </div>
+            </div>
+
+            <div id="rebootModal" class="modal-overlay">
+                <div class="modal-content logout-box">
+                    <div class="modal-header">
+                        <div class="icon-warning" style="color: #e74c3c;">🔄</div>
+                        <h2>Konfirmasi Reboot</h2>
+                        <p>Apakah Anda yakin ingin me-restart ESP32? Alat akan mati sesaat dan pembacaan sensor akan terputus sementara.</p>
+                    </div>
+                    <div class="modal-footer-btns">
+                        <button type="button" onclick="confirmReboot()" class="btn-confirm-logout">Ya, Reboot Sekarang</button>
+                        <button type="button" onclick="closeRebootModal()" class="btn-cancel">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="toast" class="toast-container">
+                <div class="toast-content">
+                    <div id="toast-icon"></div>
+                    <div class="toast-text">
+                        <span id="toast-title"></span>
+                        <span id="toast-msg"></span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="header-title">
+                    <h1>Pengaturan Sistem</h1>
+                    <p>Konfigurasi parameter purwarupa ESP32 dan preferensi dashboard</p>
+                </div>
+            </header>
+
+            <div id="guest-warning" style="text-align: center; padding: 60px 20px; background: white; border-radius: 20px; box-shadow: var(--shadow);">
+                <i data-feather="lock" style="width: 60px; height: 60px; color: #95a5a6; margin-bottom: 20px;"></i>
+                <h2 style="color: var(--dark); margin-bottom: 10px;">Akses Konfigurasi Dibatasi</h2>
+                <p style="color: #7f8c8d; margin-bottom: 25px;">Hanya admin yang dapat mengubah kalibrasi sensor dan kontrol alat.</p>
+                <button onclick="showLogin()" class="btn-login-main" style="max-width: 250px; margin: 0 auto;">Login untuk Mengatur</button>
+            </div>
+
+            <div id="admin-settings-panel" style="display: none;">
+                <div class="settings-grid">
+                    
+                    <div class="box settings-card">
+                        <div class="settings-header">
+                            <div class="icon-wrap" style="background: #eefdf3; color: #27ae60;"><i data-feather="sliders"></i></div>
+                            <h3>Ambang Batas (Threshold)</h3>
+                        </div>
+                        <p class="settings-desc">Atur batas minimum unsur hara sebelum AI memicu peringatan status Kritis.</p>
+                        <form onsubmit="saveThresholds(event)" class="settings-form">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label>Batas Minimum Nitrogen (mg/kg)</label>
+                                    <input type="number" id="thresh-n" value="50" min="0" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Batas Minimum Fosfor (mg/kg)</label>
+                                    <input type="number" id="thresh-p" value="20" min="0" required>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label>Batas Minimum Kalium (mg/kg)</label>
+                                    <input type="number" id="thresh-k" value="100" min="0" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Batas Minimum pH (Asam)</label>
+                                    <input type="number" id="thresh-ph" value="5.5" step="0.1" required>
+                                </div>
+                                <div class="input-group">
+                                    <label>Batas Maksimum pH (Basa)</label>
+                                    <input type="number" id="thresh-ph-max" value="7.0" step="0.1" required>
+                                </div>
+
+                            </div>
+                            <button type="submit" class="btn-save"><i data-feather="save"></i> Simpan Kalibrasi</button>
+                        </form>
+                    </div>
+
+                    <div class="box settings-card">
+                        <div class="settings-header">
+                            <div class="icon-wrap" style="background: #e8f4fd; color: #3498db;"><i data-feather="bell"></i></div>
+                            <h3>Preferensi Notifikasi</h3>
+                        </div>
+                        <p class="settings-desc">Pilih bagaimana sistem mengirimkan peringatan jika terjadi anomali pada lahan.</p>
+                        
+                        <div class="toggle-group">
+                            <div class="toggle-text">
+                                <strong>Peringatan Lahan Kritis (Dashboard)</strong>
+                                <span>Munculkan pop-up saat skor < 50</span>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="notif-kritis" onchange="updateNotifSetting('kritis', this.checked)"><span class="slider round"></span></label>
+                        </div>
+                        <div class="toggle-group">
+                            <div class="toggle-text">
+                                <strong>Integrasi Bot WhatsApp</strong>
+                                <span>Kirim laporan harian ke grup petani</span>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="notif-wa" onchange="updateNotifSetting('wa', this.checked)"><span class="slider round"></span></label>
+                        </div>
+                        <div class="toggle-group" style="border-bottom: none;">
+                            <div class="toggle-text">
+                                <strong>Notifikasi Email Darurat</strong>
+                                <span>Kirim email ke dinas/admin terkait</span>
+                            </div>
+                            <label class="switch"><input type="checkbox" id="notif-email" onchange="updateNotifSetting('email', this.checked)"><span class="slider round"></span></label>
+                        </div>
+                    </div>
+
+                    <div class="box settings-card" style="grid-column: 1 / -1;">
+                        <div class="settings-header">
+                            <div class="icon-wrap" style="background: #ffecec; color: #e74c3c;"><i data-feather="cpu"></i></div>
+                            <h3>Manajemen Perangkat Jarak Jauh</h3>
+                        </div>
+                        <p class="settings-desc">Kontrol jarak jauh untuk purwarupa AGROSKOR yang terpasang di lahan.</p>
+                        <div class="device-controls">
+                            <div class="control-item">
+                                <div class="control-info">
+                                    <strong>Restart Prototipe</strong>
+                                    <span>Lakukan reboot jarak jauh jika alat macet.</span>
+                                </div>
+                                <button type="button" onclick="showRebootModal()" class="btn-danger-outline"><i data-feather="refresh-cw"></i> Reboot ESP32</button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <footer class="dashboard-footer">
+                <div class="footer-content">
+                    <div class="footer-left">
+                        <p>&copy; 2026 <strong>Smart Farming Team</strong>. All rights reserved.</p>
+                        <span class="version">V 1.0.2 - Prototype Stage</span>
+                    </div>
+                    <div class="footer-right">
+                        <div class="footer-links">
+                            <a href="#"><i data-feather="help-circle"></i> Bantuan</a>
+                            <a href="#"><i data-feather="file-text"></i> Dokumentasi</a>
+                            <a href="https://fathirabid.github.io/soilscoring.github.io/" target="_blank"><i data-feather="github"></i> Repository</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+
+        </main>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="setting.js"></script>
+</body>
+</html>

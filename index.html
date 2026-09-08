@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART FARMING WEB</title>
+
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database-compat.js"></script>
+
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <!-- navbar -->
+         <aside class="sidebar">
+            <div class="sidebar-content">
+                <a href="index.html" class="logo-link">
+                    <div class="logo"><span class="icon">🌿</span><span class="text">Smart Farming Pro</span></div>
+                </a>
+
+                <div class="datetime-wrapper">
+                    <div id="clock">00:00:00</div>
+                    <div id="date">Memuat tanggal...</div>
+                </div>
+                <nav>
+                    <a href="index.html" class="active"><i data-feather="grid"></i> Dashboard</a>
+                    <a href="history.html"><i data-feather="activity"></i> History</a>
+                    <a href="mapping.html"><i data-feather="map"></i> Mapping</a>
+                    <a href="setting.html"><i data-feather="settings"></i> Settings</a>
+                </nav>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div id="guest-view">
+                    <button onclick="showLogin()" class="btn-login-main">
+                        <i data-feather="user"></i><span>Masuk Admin</span>
+                    </button>
+                </div>
+                <div id="admin-view" style="display: none;">
+                    <div class="user-profile">
+                        <div class="avatar"><img src="images/icon-4399701_1280.png" alt="User"></div>
+                        <div class="user-info">
+                            <span class="user-name">Akun Admin</span>
+                            <span class="user-status">Online</span>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="btn-logout">
+                        <i data-feather="log-out"></i><span>Keluar Sistem</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="loginModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>🌿 Admin Login</h2>
+                        <p>Gunakan akun admin untuk akses sistem</p>
+                    </div>
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="username-wrapper">
+                                <input type="text" id="loginUser" placeholder="Masukkan Username" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="loginPass" placeholder="Masukkan Password" required>
+                                <button type="button" id="togglePassword" class="toggle-btn">
+                                    <i data-feather="eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">Masuk Sekarang</button>
+                        <button type="button" onclick="closeLogin()" class="btn-cancel">Batal</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TOAST -->
+            <div id="toast" class="toast-container">
+                <div class="toast-content">
+                    <div id="toast-icon"></div>
+                    <div class="toast-text">
+                        <span id="toast-title"></span>
+                        <span id="toast-msg"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- logout modal -->
+            <div id="logoutModal" class="modal-overlay">
+                <div class="modal-content logout-box">
+                    <div class="modal-header">
+                        <div class="icon-warning">⚠️</div>
+                        <h2>Konfirmasi Keluar</h2>
+                        <p>Apakah Anda yakin ingin mengakhiri sesi admin dan keluar dari sistem?</p>
+                    </div>
+                    <div class="modal-footer-btns">
+                        <button onclick="confirmLogout()" class="btn-confirm-logout">Ya, Keluar</button>
+                        <button onclick="closeLogoutModal()" class="btn-cancel">Batal</button>
+                    </div>
+                </div>
+            </div>
+            <div id="statusModal" class="modal-overlay">
+                <div class="modal-content status-box">
+                    <div id="statusIcon" class="status-icon"></div>
+                    <h2 id="statusTitle"></h2>
+                    <p id="statusMessage"></p>
+                    <div class="loader-line"></div> 
+                </div>
+            </div>
+
+            <!-- modal komoditas -->
+            <div id="plantModal" class="modal-overlay">
+                <div class="modal-content plant-modal-box">
+                    <div class="modal-header" style="text-align: left; margin-bottom: 20px;">
+                        <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;"><i data-feather="target"></i> Pilih Komoditas</h2>
+                        <p style="margin: 0;">Pilih tanaman target untuk dianalisis kecocokannya dengan lahan.</p>
+                        <button type="button" class="btn-close-modal" onclick="closePlantModal()"><i data-feather="x"></i></button>
+                    </div>
+                    
+                    <div class="plant-grid-container">
+                        <button type="button" class="btn-reset-plant" onclick="selectPlant('umum', '-- Pilih Tanaman Target --')">
+                            <i data-feather="refresh-ccw"></i> Kosongkan Pilihan (Kembali ke Umum)
+                        </button>
+                        <div class="plant-category">
+                            <h4>Hortikultura (Sayur & Buah)</h4>
+                            <div class="plant-grid">
+                                <div class="plant-card" onclick="selectPlant('cabai', 'Cabai Merah')">Cabai Merah</div>
+                                <div class="plant-card" onclick="selectPlant('tomat', 'Tomat')">Tomat</div>
+                                <div class="plant-card" onclick="selectPlant('bawang', 'Bawang Merah')">Bawang Merah</div>
+                            </div>
+                        </div>
+                        <div class="plant-category">
+                            <h4>Hortikultura (Sayuran Daun)</h4>
+                            <div class="plant-grid">
+                                <div class="plant-card" onclick="selectPlant('bayam', 'Bayam')">Bayam</div>
+                                <div class="plant-card" onclick="selectPlant('kangkung', 'Kangkung')">Kangkung</div>
+                                <div class="plant-card" onclick="selectPlant('sawi', 'Sawi (Caisim)')">Sawi (Caisim)</div>
+                                <div class="plant-card" onclick="selectPlant('selada', 'Selada')">Selada</div>
+                                <div class="plant-card" onclick="selectPlant('kubis', 'Kubis')">Kubis</div>
+                            </div>
+                        </div>
+                        <div class="plant-category">
+                            <h4>Pangan & Palawija</h4>
+                            <div class="plant-grid">
+                                <div class="plant-card" onclick="selectPlant('padi', 'Padi Sawah')">Padi Sawah</div>
+                                <div class="plant-card" onclick="selectPlant('jagung', 'Jagung Manis')">Jagung Manis</div>
+                                <div class="plant-card" onclick="selectPlant('singkong', 'Singkong')">Singkong</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="header-title">
+                    <h1>Dashboard Analitik</h1>
+                    <p>Pemantauan Real-time Lahan Pertanian dengan Sensor IoT (Standard: Balai Penelitian Tanah)</p>
+                </div>
+                <div class="status-indicator" id="connection-status">
+                    <span class="dot" id="connection-dot"></span> 
+                    <span id="connection-text">Menunggu Alat...</span>
+                </div>
+            </header>
+
+            <!-- scoring -->
+            <section class="hero-score">
+                <div class="score-circle">
+                    <svg viewBox="0 0 36 36" class="circular-chart">
+                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path id="score-progress" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <text x="18" y="20.35" class="percentage" id="web-score-val">0</text>
+                        <text x="18" y="26" class="score-label" id="web-score-label">Memuat...</text>
+                    </svg>
+                </div>
+                <div class="quick-info">
+                    <h2 id="web-status-title">Menganalisis data lahan...</h2>
+                    <p id="web-status-desc">Menunggu data dari sensor</p>
+                </div>
+            </section>
+
+            <!-- location -->
+            <div class="location-banner box">
+                <div class="loc-left">
+                    <i data-feather="map-pin"></i>
+                    <div>
+                        <h3>Titik Koordinat Lahan</h3>
+                        <p>Terhubung dengan Satelit GPS</p>
+                    </div>
+                </div>
+                <div class="loc-right">
+                    <div class="loc-data">
+                        <span>Latitude</span>
+                        <strong id="val-lat">Mencari...</strong>
+                    </div>
+                    <div class="loc-data">
+                        <span>Longitude</span>
+                        <strong id="val-lng">Mencari...</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARAMETERS -->
+            <div class="parameters-grid">
+                <div class="param-card nitrogen">
+                    <div class="card-header"><i data-feather="zap"></i> Nitrogen (N)</div>
+                    <div class="value"><span id="val-n">0</span> <small>mg/kg</small></div>
+                    <div class="progress-bar"><div class="fill n-fill" style="width: 0%"></div></div>
+                    <div class="status-label" id="n-status-label">Memuat...</div>
+                </div>
+
+                <div class="param-card phosphor">
+                    <div class="card-header"><i data-feather="target"></i> Fosfor (P)</div>
+                    <div class="value"><span id="val-p">0</span> <small>mg/kg</small></div>
+                    <div class="progress-bar"><div class="fill p-fill" style="width: 0%"></div></div>
+                    <div class="status-label" id="p-status-label">Memuat...</div>
+                </div>
+
+                <div class="param-card potassium">
+                    <div class="card-header"><i data-feather="sun"></i> Kalium (K)</div>
+                    <div class="value"><span id="val-k">0</span> <small>mg/kg</small></div>
+                    <div class="progress-bar"><div class="fill k-fill" style="width: 0%"></div></div>
+                    <div class="status-label" id="k-status-label">Memuat...</div>
+                </div>
+
+                <div class="param-card ph">
+                    <div class="card-header"><i data-feather="droplet"></i> pH Tanah</div>
+                    <div class="value"><span id="val-ph">0</span></div>
+                    <div id="ph-status-label" class="status-badge">Memantau...</div>
+                </div>
+
+                <div class="param-card temp">
+                    <div class="card-header"><i data-feather="thermometer"></i> Suhu Lahan</div>
+                    <div class="value"><span id="val-temp">0</span> <small>°C</small></div>
+                </div>
+
+                <div class="param-card humidity">
+                    <div class="card-header"><i data-feather="cloud-rain"></i> Kelembapan</div>
+                    <div class="value"><span id="val-hum">0</span> <small>%</small></div>
+                </div>
+                <div class="param-card ec">
+                    <div class="card-header"><i data-feather="activity"></i> Konduktivitas Elektrik (EC)</div>
+                    <div class="value"><span id="val-ec">0</span> <small>μS/cm</small></div>
+                </div>
+
+                <div class="param-card salinity">
+                    <div class="card-header"><i data-feather="hexagon"></i> Salinitas</div>
+                    <div class="value"><span id="val-salt">0</span> <small>mg/L</small></div>
+                </div>
+            </div>
+
+            <!-- Grafik -->
+            <div class="chart-container-wrapper">
+                <div class="chart-card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3><i data-feather="activity"></i> Monitoring Tanah</h3>
+                        <span class="live-tag">Real Time data</span>
+                        <button onclick="downloadCSV()" class="btn-download">
+                            <i data-feather="download"></i> Ekspor CSV
+                        </button>
+                    </div>
+                    <div class="canvas-wrapper">
+                        <canvas id="multiSensorChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- input lebar media tanam -->
+             <div class="land-area-container">
+                <div class="land-area-title">
+                    <i data-feather="map"></i>
+                    <h3>Luas Lahan Aktual:</h3>
+                </div>
+                
+                <div class="land-input-group">
+                    <div class="land-input-wrapper">
+                        <input type="number" id="luas-lahan" placeholder="Contoh: 500" value="0">
+                        <span>m²</span>
+                    </div>
+                    <button id="btn-konfirmasi-lahan" class="btn-confirm-land" onclick="konfirmasiLuasLahan()">
+                        <i data-feather="check-circle"></i> Terapkan
+                    </button>
+                </div>
+
+                <p class="land-area-desc">Masukkan luas lahan. AI akan mengonversi dosis Hektar menjadi <strong>Gram/Kilogram</strong> yang 100% presisi untuk lahan Anda.</p>
+            </div>
+
+            <!-- Rekomendasi & Treatment -->
+            <div class="analysis-grid">
+                <div class="box ai-analysis">
+                    <h3><i data-feather="cpu"></i> Analisis Cerdas AI</h3>
+                    <ul id="ai-analysis-list">
+                        <li>Memuat analisis lahan...</li>
+                    </ul>
+                </div>
+                <div class="box recommendation-box">
+                    <h3><i data-feather="zap"></i> Rekomendasi Presisi</h3>
+                    <p id="ai-recom-text">Menunggu kalkulasi dari sensor...</p>
+                </div>
+            </div>
+
+            <!-- fitur rekomendasi pengguna -->
+            <div class="box commodity-analysis-expert">
+                <div class="cae-header">
+                    <div class="cae-title-wrapper">
+                        <h3><i data-feather="target"></i> Analisis Spesifik Komoditas</h3>
+                        <p>Bandingkan lahan dengan syarat tumbuh ideal tanaman target secara real-time.</p>
+                    </div>
+                    <span class="badge-blue-pulse">Fitur Pakar</span>
+                </div>
+                
+                <div class="cae-input-section">
+                    <label>Pilih Rencana Tanam:</label>
+                    <button type="button" class="btn-select-plant" onclick="showPlantModal()">
+                        <span id="selected-plant-text">-- Pilih Tanaman Target --</span>
+                        <i data-feather="chevron-down"></i>
+                    </button>
+                </div>
+
+                <div id="plant-specific-result" class="cae-result cae-empty-state">
+                    </div>
+            </div>
+
+            <!-- SECTION FOOTER -->
+            <footer class="dashboard-footer">
+                    <div class="footer-content">
+                        <div class="footer-left">
+                            <p>&copy; 2026 <strong>Smart Farming Team</strong>. All rights reserved.</p>
+                            <span class="version">V 1.0.2 - Prototype Stage</span>
+                        </div>
+                        <div class="footer-right">
+                            <div class="footer-links">
+                                <a href="#"><i data-feather="help-circle"></i> Bantuan</a>
+                                <a href="#"><i data-feather="file-text"></i> Dokumentasi</a>
+                                <a href="https://fathirabid.github.io/soilscoring.github.io/" target="_blank"><i data-feather="github"></i> Repository</a>
+                            </div>
+                        </div>
+                    </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="sensor.js"></script>
+</body>
+</html>

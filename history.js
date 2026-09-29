@@ -217,11 +217,11 @@ function loadHistoryData() {
                 tr.innerHTML = `
                     <td>${timeString}</td>
                     <td><strong>${data.score} / 100</strong></td>
-                    <td>${data.ph}</td>
+                    <td>${parseFloat(data.ph).toFixed(2).replace('.', ',')}</td>
                     <td>${data.nitrogen}</td>
                     <td>${data.fosfor}</td>
                     <td>${data.kalium}</td>
-                    <td>${data.hum}%</td>
+                    <td>${parseFloat(data.hum).toFixed(2).replace('.', ',')}%</td>
                     <td><span class="badge-status ${badgeClass}">${data.status}</span></td>
                 `;
                 tbody.appendChild(tr);
@@ -342,7 +342,6 @@ function closeCsvModal() {
     document.getElementById('csvModal').style.display = 'none'; 
 }
 
-// --- FUNGSI EKSEKUSI UNDUH CSV ---
 function confirmDownloadCSV() {
     // 1. Tutup modal terlebih dahulu
     closeCsvModal();
@@ -359,10 +358,19 @@ function confirmDownloadCSV() {
         let row = [], cols = rows[i].querySelectorAll("td, th");
         
         for (let j = 0; j < cols.length; j++) {
-            // Tambahkan tanda kutip agar format teks/angka yang memiliki koma tidak error di Excel
-            row.push('"' + cols[j].innerText + '"'); 
+            let cellText = cols[j].innerText;
+            
+            // Trik khusus Excel Indonesia: Ubah titik desimal jadi koma khusus untuk angka
+            // (Kita kecualikan kolom tanggal/waktu yang memiliki tanda garis miring '/')
+            if (cellText.includes('.') && !cellText.includes('/')) {
+                cellText = cellText.replace('.', ',');
+            }
+
+            // Tambahkan tanda kutip untuk mencegah error format
+            row.push('"' + cellText + '"'); 
         }
-        csv.push(row.join(",")); // Gabungkan kolom dengan koma
+        // KUNCI PERBAIKAN: Gunakan TITIK KOMA (;) sebagai pemisah kolom
+        csv.push(row.join(";")); 
     }
 
     // 4. Eksekusi Download File ke Browser Pengguna
@@ -470,8 +478,8 @@ function renderHistoryChart(dataArr) {
         dK.push(d.kalium);
         
         // 2. Masukkan angka dari Firebase ke dalam penampung
-        dpH.push(d.ph);
-        dHum.push(d.hum);
+        dpH.push(parseFloat(d.ph).toFixed(2).replace('.', ','));
+        dHum.push(parseFloat(d.hum).toFixed(2).replace('.', ','));
     });
 
     if (historyTrendChart) historyTrendChart.destroy(); // Bersihkan kanvas lama

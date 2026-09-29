@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | Smart Farming Web</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <a href="index.html" class="logo-link">
+                    <div class="logo">
+                        <span class="icon">🌿</span>
+                        <span class="text">Smart Farming</span>
+                    </div>
+                </a>
+
+                <div class="datetime-wrapper">
+                    <div id="clock">00:00:00</div>
+                    <div id="date">Memuat tanggal...</div>
+                </div>
+
+                <nav>
+                    <a href="index.html"><i data-feather="grid"></i> Dashboard</a>
+                    <a href="history.html"><i data-feather="activity"></i> History</a>
+                    <a href="mapping.html"><i data-feather="map"></i> Mapping</a>
+                    <a href="setting.html"><i data-feather="settings"></i> Settings</a>
+                    <a href="about.html" class="active"><i data-feather="info"></i> About Us</a>
+                </nav>
+            </div>
+
+            <div class="sidebar-footer">
+                <div id="guest-view">
+                    <button onclick="showLogin()" class="btn-login-main">
+                        <i data-feather="user"></i>
+                        <span>Masuk Admin</span>
+                    </button>
+                </div>
+                <div id="admin-view" style="display: none;">
+                    <div class="user-profile">
+                        <div class="avatar"><img src="images/icon-4399701_1280.png" alt="User">
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Akun Admin</span>
+                            <span class="user-status">Online</span>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="btn-logout">
+                        <i data-feather="log-out"></i><span>Keluar Sistem</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="loginModal" class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>🌿 Admin Login</h2>
+                        <p>Gunakan akun admin untuk akses sistem</p>
+                    </div>
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="username-wrapper">
+                                <input type="text" id="loginUser" placeholder="Masukkan Username" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="loginPass" placeholder="Masukkan Password" required>
+                                <button type="button" id="togglePassword" class="toggle-btn">
+                                    <i data-feather="eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-submit">Masuk Sekarang</button>
+                        <button type="button" onclick="closeLogin()" class="btn-cancel">Batal</button>
+                    </form>
+                </div>
+            </div>
+
+            <div id="toast" class="toast-container">
+                <div class="toast-content">
+                    <div id="toast-icon"></div>
+                    <div class="toast-text">
+                        <span id="toast-title"></span>
+                        <span id="toast-msg"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="logoutModal" class="modal-overlay">
+                <div class="modal-content logout-box">
+                    <div class="modal-header">
+                        <div class="icon-warning">⚠️</div>
+                        <h2>Konfirmasi Keluar</h2>
+                        <p>Apakah Anda yakin ingin mengakhiri sesi admin dan keluar dari sistem?</p>
+                    </div>
+                    <div class="modal-footer-btns">
+                        <button onclick="confirmLogout()" class="btn-confirm-logout">Ya, Keluar</button>
+                        <button onclick="closeLogoutModal()" class="btn-cancel">Batal</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="statusModal" class="modal-overlay">
+                <div class="modal-content status-box">
+                    <div id="statusIcon" class="status-icon"></div>
+                    <h2 id="statusTitle"></h2>
+                    <p id="statusMessage"></p>
+                    <div class="loader-line"></div> 
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="header-title">
+                    <h1>Tentang Kami</h1>
+                    <p>Dokumentasi Inovasi, Arsitektur Sistem, dan Tim Pengembang AGROSKOR.</p>
+                </div>
+            </header>
+
+            <section class="about-us-section">
+                
+                <!-- 1. SEKSI PURWARUPA (NARASI AKADEMIS) -->
+                <div class="box prototype-showcase">
+                    <div class="proto-text">
+                        <span class="badge-green-soft">Prototipe AGROSKOR</span>
+                        <h3>AGROSKOR (Smart Soil Scoring)</h3>
+                        
+                        <!-- Paragraf 1: Narasi Akademik Aspek Fisis & Komputasi -->
+                        <p>AGROSKOR adalah instrumen <em>Internet of Things</em> (IoT) yang mengintegrasikan komputasi <em>edge</em> melalui mikrokontroler ESP32 Dual-Core untuk memproses data biofisik tanah secara presisi. Sistem ini mengandalkan probe sensor multispektral yang tahan terhadap kondisi cuaca ekstrem untuk mengakuisisi parameter esensial lahan secara <em>real-time</em>, meliputi level makronutrien (Nitrogen, Fosfor, Kalium), derajat keasaman (pH), konduktivitas elektrik (EC), kelembapan, serta fluktuasi suhu lingkungan. Penggunaan protokol komunikasi data industri memastikan fidelitas transmisi yang tinggi menuju infrastruktur <em>cloud</em>.</p>
+                        
+                        <!-- Paragraf 2: Urgensi & Sistem Pakar -->
+                        <p style="margin-top: 15px;">Sebagai manifestasi dari paradigma Pertanian Presisi (<em>Precision Agriculture</em>), AGROSKOR dirancang untuk mengeliminasi metode pemupukan empiris konvensional yang berisiko memicu degradasi lahan. Melalui integrasi kecerdasan buatan pada antarmuka web, sistem secara otomatis mengonversi data mentah menjadi metrik <em>Soil Score</em> komprehensif dan menghasilkan preskripsi ameliorasi lahan yang dikalibrasi secara spesifik sesuai dengan profil komoditas target, sehingga mendukung optimalisasi hasil panen yang berkelanjutan.</p>
+                    </div>
+                    <div class="proto-image-wrapper">
+                        <div class="proto-gallery">
+                            <img src="images/prototype.jpeg" alt="Purwarupa Hardware 1" class="proto-gallery-img">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. SEKSI BARU: ARSITEKTUR HARDWARE -->
+                <div class="about-header" style="margin-top: 60px; margin-bottom: 25px;">
+                    <h2><i data-feather="cpu"></i> Arsitektur Perangkat Keras</h2>
+                    <p>Spesifikasi teknis instrumen pemantauan kesuburan lahan terintegrasi.</p>
+                </div>
+                
+                <div class="parameters-grid" style="margin-bottom: 60px;">
+                    <div class="box param-card" style="text-align: center; padding: 30px 20px;">
+                        <i data-feather="cpu" style="width: 45px; height: 45px; color: var(--primary); margin-bottom: 15px;"></i>
+                        <h4 style="margin: 0 0 10px 0; font-size: 16px;">ESP32 Microcontroller</h4>
+                        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">Pusat komputasi <em>edge</em> dan modul telemetri Wi-Fi terintegrasi untuk transmisi data sensor secara nirkabel ke basis data Firebase.</p>
+                    </div>
+                    <div class="box param-card" style="text-align: center; padding: 30px 20px;">
+                        <i data-feather="radio" style="width: 45px; height: 45px; color: #f39c12; margin-bottom: 15px;"></i>
+                        <h4 style="margin: 0 0 10px 0; font-size: 16px;">Sensor NPK 8-in-1</h4>
+                        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">Probe presisi tinggi berbasis protokol Modbus RS485 untuk akuisisi unsur hara makro dan parameter lingkungan tanah.</p>
+                    </div>
+                    <div class="box param-card" style="text-align: center; padding: 30px 20px;">
+                        <i data-feather="navigation" style="width: 45px; height: 45px; color: #3498db; margin-bottom: 15px;"></i>
+                        <h4 style="margin: 0 0 10px 0; font-size: 16px;">GPS NEO-M8N</h4>
+                        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">Modul geolokasi satelit untuk pencatatan titik koordinat lahan secara <em>real-time</em> pada fitur pemetaan spasial web.</p>
+                    </div>
+                </div>
+
+                <!-- 3. SEKSI PROFIL TIM PENGEMBANG -->
+                <div class="about-header">
+                    <h2><i data-feather="users"></i> Tim Inovator SoilSense</h2>
+                </div>
+
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-avatar">
+                            <img src="images/foto fathir dpm.jpeg" alt="Ketua Tim">
+                        </div>
+                        <h4>Faathir Abid Firdaus</h4>
+                        <span class="team-role">Project Manager & Hardware</span>
+                        <p>Bertanggung jawab atas perancangan arsitektur IoT dan integrasi kelistrikan sensor presisi.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- FOOTER -->
+             <footer class="dashboard-footer">
+                    <div class="footer-content">
+                        <div class="footer-left">
+                            <p>&copy; 2026 <strong>AGROSKOR Team</strong>. All rights reserved.</p>
+                            <span class="version">V 1.0.2 - Prototype Stage</span>
+                        </div>
+                        <div class="footer-right">
+                            <div class="footer-links">
+                                <a href="#"><i data-feather="help-circle"></i> Bantuan</a>
+                                <a href="#"><i data-feather="file-text"></i> Dokumentasi</a>
+                                <a href="https://fathirabid.github.io/soilscoring.github.io/" target="_blank"><i data-feather="github"></i> Repository</a>
+                            </div>
+                        </div>
+                    </div>
+            </footer>
+        </main>
+    </div>
+
+    <script src="about.js"></script>
+</body>
+</html>

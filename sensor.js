@@ -173,7 +173,7 @@
             n: [], p: [], k: [], ph: [], temp: [], hum: [], ec: [], salt: []
         };
 
-        let historyLogData = [];
+        let historyLogData = JSON.parse(sessionStorage.getItem("liveCsvBackup")) || [];
 
         // Atur warna bawaan Chart.js untuk mode gelap
         Chart.defaults.color = '#cbd5e1'; 
@@ -236,21 +236,26 @@
 
             // 2. Siapkan Header CSV (Gunakan Titik Koma untuk Excel Indonesia)
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "Waktu;Nitrogen(N);Fosfor(P);Kalium(K);pH;Suhu;Kelembapan;EC;Salinitas\n";
+            // Bungkus header dengan tanda kutip agar seragam
+            csvContent += '"Waktu";"Nitrogen(N)";"Fosfor(P)";"Kalium(K)";"pH";"Suhu";"Kelembapan";"EC";"Salinitas"\n';
 
             // 3. Gabungkan seluruh data dari array historyLogData (Tanpa batas 60)
             historyLogData.forEach((rowObj) => {
-                let row = [
+                // Siapkan data mentah
+                let rawRow = [
                     rowObj.waktu,
                     rowObj.n,
                     rowObj.p,
                     rowObj.k,
-                    rowObj.ph,
-                    rowObj.temp,
-                    rowObj.hum,
+                    parseFloat(rowObj.ph).toFixed(2).replace('.', ','), 
+                    parseFloat(rowObj.temp).toFixed(2).replace('.', ','), 
+                    parseFloat(rowObj.hum).toFixed(2).replace('.', ','),
                     rowObj.ec,
                     rowObj.salt
-                ].join(";"); // Pemisah titik koma ; agar terpisah otomatis di Excel
+                ];
+                
+                // BUNGKUS DENGAN KUTIP GANDA ("...") SEPERTI DI HISTORY.JS
+                let row = rawRow.map(item => '"' + item + '"').join(";"); 
                 
                 csvContent += row + "\n";
             });
@@ -664,6 +669,8 @@
                     salt: data.salinitas
                 });
 
+                sessionStorage.setItem("liveCsvBackup", JSON.stringify(historyLogData));
+
                 // --- DATABASE KEBUTUHAN KOMODITAS ---
                 // masih pakai data dummy
                 const cropDatabase = [
@@ -946,6 +953,9 @@
         
         const recomText = document.getElementById('ai-recom-text');
         if(recomText) recomText.textContent = "Menunggu kalkulasi dari sensor...";
+
+        // Hapus backup memori CSV saat logout
+        sessionStorage.removeItem("liveCsvBackup");
 
         // RESET GRAFIK KE KOSONG 
         labels.length = 0; // Kosongkan label waktu (sumbu X)

@@ -672,7 +672,7 @@
                 sessionStorage.setItem("liveCsvBackup", JSON.stringify(historyLogData));
 
                 // --- DATABASE KEBUTUHAN KOMODITAS ---
-                // masih pakai data dummy
+                // MASIH MENGGUNAKAN DATA DUMMY
                 const cropDatabase = [
                     { name: "Padi Sawah", phMin: 5.5, phMax: 6.5, n: 45, p: 20, k: 30 },
                     { name: "Bawang Merah", phMin: 5.6, phMax: 7.0, n: 80, p: 40, k: 40 },

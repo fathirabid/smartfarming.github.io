@@ -163,7 +163,7 @@ function applyAdminState(loginStatus) {
 
 // --- FUNGSI BERSIHKAN CACHE / FORMAT SD CARD JARAK JAUH ---
 function clearCache() {
-    if(confirm("⚠️ PERINGATAN: Seluruh data log sejarah yang tersimpan di memori SD Card alat akan dihapus permanen. Lanjutkan?")) {
+    if(confirm("PERINGATAN: Seluruh data log sejarah yang tersimpan di memori SD Card alat akan dihapus permanen. Lanjutkan?")) {
         database.ref('AgroskorPro/Command/clearLog').set(true)
         .then(() => {
             showToast('success', 'Memori Dibersihkan', 'Perintah format memori telah dikirim ke ESP32.');

@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SMART FARMING WEB</title>
+    <title>AGROSKOR &middot; Dasbor Lahan</title>
 
     <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#f2eee4">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Crect width='34' height='34' rx='9' fill='%231d1c18'/%3E%3Crect x='8' y='9' width='18' height='3.4' rx='1.7' fill='%23a6c94a'/%3E%3Crect x='8' y='15.3' width='13.5' height='3.4' rx='1.7' fill='%23c98a12'/%3E%3Crect x='8' y='21.6' width='9' height='3.4' rx='1.7' fill='%23b5643c'/%3E%3C/svg%3E">
     <script src="https://unpkg.com/feather-icons"></script>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -21,48 +25,51 @@
         <!-- navbar -->
          <aside class="sidebar">
             <div class="sidebar-content">
-                <a href="index.html" class="logo-link">
-                    <div class="logo"><span class="icon">🌿</span><span class="text">Soil Lens</span></div>
+                <a href="index.html" class="logo-link" aria-label="AGROSKOR, ke dasbor">
+                    <div class="logo"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span class="text">AGROSKOR<small>Smart Soil Scoring</small></span></div>
                 </a>
 
                 <div class="datetime-wrapper">
                     <div id="clock">00:00:00</div>
                     <div id="date">Memuat tanggal...</div>
                 </div>
-                <nav>
-                    <a href="index.html" class="active"><i data-feather="grid"></i> Dashboard</a>
-                    <a href="history.html"><i data-feather="activity"></i> History</a>
-                    <a href="mapping.html"><i data-feather="map"></i> Mapping</a>
-                    <a href="setting.html"><i data-feather="settings"></i> Settings</a>
-                    <a href="about.html"><i data-feather="info"></i> About Us</a>
+                <nav aria-label="Navigasi utama">
+                    <a href="index.html" class="active" aria-current="page"><i data-feather="grid"></i><span>Dasbor</span></a>
+                    <a href="history.html"><i data-feather="activity"></i><span>Riwayat</span></a>
+                    <a href="mapping.html"><i data-feather="map"></i><span>Peta</span></a>
+                    <a href="setting.html"><i data-feather="sliders"></i><span>Pengaturan</span></a>
+                    <a href="about.html"><i data-feather="info"></i><span>Tentang</span></a>
                 </nav>
             </div>
             
             <div class="sidebar-footer">
                 <div id="guest-view">
                     <button onclick="showLogin()" class="btn-login-main">
-                        <i data-feather="user"></i><span>Masuk Admin</span>
+                        <i data-feather="log-in"></i><span>Masuk Admin</span>
                     </button>
                 </div>
                 <div id="admin-view" style="display: none;">
-                    <div class="user-profile">
-                        <div class="avatar"><img src="images/icon-4399701_1280.png" alt="User"></div>
-                        <div class="user-info">
-                            <span class="user-name">Akun Admin</span>
-                            <span class="user-status">Online</span>
+                    <div class="admin-row">
+                        <div class="user-profile">
+                            <div class="avatar"><img src="images/icon-4399701_1280.png" alt=""></div>
+                            <div class="user-info">
+                                <span class="user-name">Akun Admin</span>
+                                <span class="user-status">Sensor tersambung</span>
+                            </div>
                         </div>
+                        <button onclick="handleLogout()" class="btn-logout" aria-label="Keluar">
+                            <i data-feather="log-out"></i><span>Keluar</span>
+                        </button>
                     </div>
-                    <button onclick="handleLogout()" class="btn-logout">
-                        <i data-feather="log-out"></i><span>Keluar Sistem</span>
-                    </button>
                 </div>
             </div>
 
             <div id="loginModal" class="modal-overlay">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>🌿 Admin Login</h2>
-                        <p>Gunakan akun admin untuk akses sistem</p>
+                        <div class="modal-brand"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span>AGROSKOR</span></div>
+                        <h2>Masuk sebagai Admin</h2>
+                        <p>Buka data sensor langsung, riwayat, peta, dan kontrol alat.</p>
                     </div>
                     <form id="loginForm">
                         <div class="input-group">
@@ -80,7 +87,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit">Masuk Sekarang</button>
+                        <button type="submit" class="btn-submit">Masuk</button>
                         <button type="button" onclick="closeLogin()" class="btn-cancel">Batal</button>
                     </form>
                 </div>
@@ -101,9 +108,9 @@
             <div id="logoutModal" class="modal-overlay">
                 <div class="modal-content logout-box">
                     <div class="modal-header">
-                        <div class="icon-warning">⚠️</div>
-                        <h2>Konfirmasi Keluar</h2>
-                        <p>Apakah Anda yakin ingin mengakhiri sesi admin dan keluar dari sistem?</p>
+                        <div class="icon-warning is-crit"><i data-feather="log-out"></i></div>
+                        <h2>Keluar dari sesi admin?</h2>
+                        <p>Pembacaan sensor di layar ini akan berhenti sampai kamu masuk lagi.</p>
                     </div>
                     <div class="modal-footer-btns">
                         <button onclick="confirmLogout()" class="btn-confirm-logout">Ya, Keluar</button>
@@ -123,15 +130,15 @@
             <!-- modal komoditas -->
             <div id="plantModal" class="modal-overlay">
                 <div class="modal-content plant-modal-box">
-                    <div class="modal-header" style="text-align: left; margin-bottom: 20px;">
-                        <h2 style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;"><i data-feather="target"></i> Pilih Komoditas</h2>
-                        <p style="margin: 0;">Pilih tanaman target untuk dianalisis kecocokannya dengan lahan.</p>
-                        <button type="button" class="btn-close-modal" onclick="closePlantModal()"><i data-feather="x"></i></button>
+                    <div class="modal-header">
+                        <h2><i data-feather="target"></i> Pilih tanaman target</h2>
+                        <p>Lahan akan dicocokkan dengan kebutuhan hara &amp; pH tanaman ini.</p>
+                        <button type="button" class="btn-close-modal" onclick="closePlantModal()" aria-label="Tutup"><i data-feather="x"></i></button>
                     </div>
                     
                     <div class="plant-grid-container">
-                        <button type="button" class="btn-reset-plant" onclick="selectPlant('umum', '-- Pilih Tanaman Target --')">
-                            <i data-feather="refresh-ccw"></i> Kosongkan Pilihan (Kembali ke Umum)
+                        <button type="button" class="btn-reset-plant" onclick="selectPlant('umum', 'Pilih tanaman…')">
+                            <i data-feather="rotate-ccw"></i> Kosongkan pilihan
                         </button>
                         <div class="plant-category">
                             <h4>Hortikultura (Sayur & Buah)</h4>
@@ -144,7 +151,7 @@
                         <div class="plant-category">
                             <h4>Hortikultura (Sayuran Daun)</h4>
                             <div class="plant-grid">
-                                <div class="plant-card" onclick="selectPlant('bayam', 'Bayam')">Bayam</div>
+                                <div class="plant-card" onclick="selectPlant('Bayam', 'Bayam')">Bayam</div>
                                 <div class="plant-card" onclick="selectPlant('kangkung', 'Kangkung')">Kangkung</div>
                                 <div class="plant-card" onclick="selectPlant('sawi', 'Sawi (Caisim)')">Sawi (Caisim)</div>
                                 <div class="plant-card" onclick="selectPlant('selada', 'Selada')">Selada</div>
@@ -166,190 +173,237 @@
 
         <!-- MAIN CONTENT -->
         <main class="main-content">
+            <a href="index.html" class="mobile-brand" aria-label="AGROSKOR"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span>AGROSKOR</span></a>
             <header class="top-bar">
                 <div class="header-title">
-                    <h1>Dashboard Analitik</h1>
-                    <p>Pemantauan Real-time Lahan Pertanian dengan Sensor IoT (Standard: Balai Penelitian Tanah)</p>
+                    <span class="eyebrow">Laporan tanah &middot; real-time</span>
+                    <h1>Dasbor Lahan</h1>
+                    <p>Pembacaan sensor tanah langsung dari ESP32, dinilai dengan acuan Balai Penelitian Tanah.</p>
                 </div>
-                <div class="status-indicator" id="connection-status">
-                    <span class="dot" id="connection-dot"></span> 
-                    <span id="connection-text">Menunggu Alat...</span>
+                <div class="status-indicator" id="connection-status" role="status">
+                    <span class="dot" id="connection-dot"></span>
+                    <span id="connection-text">Menunggu alat&hellip;</span>
                 </div>
             </header>
 
-            <!-- scoring -->
-            <section class="hero-score">
-                <div class="score-circle">
-                    <svg viewBox="0 0 36 36" class="circular-chart">
-                        <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path id="score-progress" class="circle" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <text x="18" y="20.35" class="percentage" id="web-score-val">0</text>
-                        <text x="18" y="26" class="score-label" id="web-score-label">Memuat...</text>
-                    </svg>
+            <!-- Skor kesuburan -->
+            <section class="hero-score" data-state="offline" aria-labelledby="web-status-title">
+                <div class="score-main">
+                    <span class="score-kicker">Skor kesuburan</span>
+                    <div class="score-figure">
+                        <span class="percentage" id="web-score-val">&mdash;</span>
+                        <span class="score-of">/100</span>
+                    </div>
+                    <span class="score-label" id="web-score-label">Memuat&hellip;</span>
                 </div>
                 <div class="quick-info">
-                    <h2 id="web-status-title">Menganalisis data lahan...</h2>
+                    <h2 id="web-status-title">Menganalisis data lahan&hellip;</h2>
                     <p id="web-status-desc">Menunggu data dari sensor</p>
+                    <div class="score-scale" aria-hidden="true">
+                        <div class="scale-track">
+                            <span class="seg seg-crit"></span>
+                            <span class="seg seg-warn"></span>
+                            <span class="seg seg-good"></span>
+                            <span class="scale-marker"></span>
+                        </div>
+                        <div class="scale-ticks">
+                            <span>0 kurang</span><span class="t-50">50 cukup</span><span class="t-80">80 baik</span><span class="t-100">100</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-meta location-banner">
+                    <div class="loc-left">
+                        <i data-feather="map-pin"></i>
+                        <div>
+                            <h3>Titik koordinat lahan</h3>
+                            <p>GPS NEO-M8N</p>
+                        </div>
+                    </div>
+                    <div class="loc-right">
+                        <div class="loc-data"><span>Lat</span><strong id="val-lat">&mdash;</strong></div>
+                        <div class="loc-data"><span>Lng</span><strong id="val-lng">&mdash;</strong></div>
+                    </div>
                 </div>
             </section>
 
-            <!-- location -->
-            <div class="location-banner box">
-                <div class="loc-left">
-                    <i data-feather="map-pin"></i>
-                    <div>
-                        <h3>Titik Koordinat Lahan</h3>
-                        <p>Terhubung dengan Satelit GPS</p>
-                    </div>
-                </div>
-                <div class="loc-right">
-                    <div class="loc-data">
-                        <span>Latitude</span>
-                        <strong id="val-lat">Mencari...</strong>
-                    </div>
-                    <div class="loc-data">
-                        <span>Longitude</span>
-                        <strong id="val-lng">Mencari...</strong>
-                    </div>
-                </div>
+            <!-- Pembacaan tanah: bento asimetris -->
+            <div class="section-head">
+                <h2><span class="sec-no">01</span> Pembacaan tanah</h2>
+                <span class="section-note">diperbarui tiap data masuk</span>
             </div>
+            <div class="readings-bento">
+                <section class="bento-npk" aria-labelledby="npk-title">
+                    <header class="bento-head">
+                        <h3 id="npk-title">Unsur hara makro</h3>
+                        <span class="section-note">mg/kg &middot; batas minimum di Pengaturan</span>
+                    </header>
+                    <article class="npk-row nitrogen">
+                        <div class="npk-id"><span class="chem">N</span><span class="param-name">Nitrogen</span></div>
+                        <div class="value"><span id="val-n">&mdash;</span> <small>mg/kg</small></div>
+                        <div class="npk-bar">
+                            <div class="progress-bar"><div class="fill n-fill" style="width: 0%"></div></div>
+                            <div class="bar-scale"><span>0</span><span>200</span></div>
+                        </div>
+                        <span class="status-label" id="n-status-label">Memuat&hellip;</span>
+                    </article>
+                    <article class="npk-row phosphor">
+                        <div class="npk-id"><span class="chem">P</span><span class="param-name">Fosfor</span></div>
+                        <div class="value"><span id="val-p">&mdash;</span> <small>mg/kg</small></div>
+                        <div class="npk-bar">
+                            <div class="progress-bar"><div class="fill p-fill" style="width: 0%"></div></div>
+                            <div class="bar-scale"><span>0</span><span>100</span></div>
+                        </div>
+                        <span class="status-label" id="p-status-label">Memuat&hellip;</span>
+                    </article>
+                    <article class="npk-row potassium">
+                        <div class="npk-id"><span class="chem">K</span><span class="param-name">Kalium</span></div>
+                        <div class="value"><span id="val-k">&mdash;</span> <small>mg/kg</small></div>
+                        <div class="npk-bar">
+                            <div class="progress-bar"><div class="fill k-fill" style="width: 0%"></div></div>
+                            <div class="bar-scale"><span>0</span><span>250</span></div>
+                        </div>
+                        <span class="status-label" id="k-status-label">Memuat&hellip;</span>
+                    </article>
+                </section>
 
-            <!-- PARAMETERS -->
-            <div class="parameters-grid">
-                <div class="param-card nitrogen">
-                    <div class="card-header"><i data-feather="zap"></i> Nitrogen (N)</div>
-                    <div class="value"><span id="val-n">0</span> <small>mg/kg</small></div>
-                    <div class="progress-bar"><div class="fill n-fill" style="width: 0%"></div></div>
-                    <div class="status-label" id="n-status-label">Memuat...</div>
-                </div>
+                <article class="bento-ph ph-card" data-live="false" aria-labelledby="ph-title">
+                    <div class="card-header"><h3 id="ph-title" class="param-name">pH tanah</h3><span id="ph-status-label" class="status-badge">Memantau&hellip;</span></div>
+                    <div class="value"><span id="val-ph">&mdash;</span></div>
+                    <div class="ph-scale" aria-hidden="true">
+                        <div class="ph-track"><span class="ph-marker"></span></div>
+                        <div class="ph-ticks"><span>3 asam</span><span class="t-55">5,5</span><span class="t-7">7 netral</span><span class="t-85">8,5</span><span>10 basa</span></div>
+                    </div>
+                    <p class="ph-ideal">Rentang umum tanaman pangan <strong>5,5&ndash;7,0</strong></p>
+                    <ul class="ph-notes">
+                        <li><b>&lt; 5,5</b><span>Fosfor terikat dan sulit diserap akar. Dikoreksi dengan kapur dolomit.</span></li>
+                        <li><b>&gt; 7,5</b><span>Besi, mangan, dan seng sulit tersedia. Dikoreksi dengan sulfur pertanian.</span></li>
+                    </ul>
+                </article>
 
-                <div class="param-card phosphor">
-                    <div class="card-header"><i data-feather="target"></i> Fosfor (P)</div>
-                    <div class="value"><span id="val-p">0</span> <small>mg/kg</small></div>
-                    <div class="progress-bar"><div class="fill p-fill" style="width: 0%"></div></div>
-                    <div class="status-label" id="p-status-label">Memuat...</div>
-                </div>
-
-                <div class="param-card potassium">
-                    <div class="card-header"><i data-feather="sun"></i> Kalium (K)</div>
-                    <div class="value"><span id="val-k">0</span> <small>mg/kg</small></div>
-                    <div class="progress-bar"><div class="fill k-fill" style="width: 0%"></div></div>
-                    <div class="status-label" id="k-status-label">Memuat...</div>
-                </div>
-
-                <div class="param-card ph">
-                    <div class="card-header"><i data-feather="droplet"></i> pH Tanah</div>
-                    <div class="value"><span id="val-ph">0</span></div>
-                    <div id="ph-status-label" class="status-badge">Memantau...</div>
-                </div>
-
-                <div class="param-card temp">
-                    <div class="card-header"><i data-feather="thermometer"></i> Suhu Lahan</div>
-                    <div class="value"><span id="val-temp">0</span> <small>°C</small></div>
-                </div>
-
-                <div class="param-card humidity">
-                    <div class="card-header"><i data-feather="cloud-rain"></i> Kelembapan</div>
-                    <div class="value"><span id="val-hum">0</span> <small>%</small></div>
-                </div>
-                <div class="param-card ec">
-                    <div class="card-header"><i data-feather="activity"></i> Konduktivitas Elektrik (EC)</div>
-                    <div class="value"><span id="val-ec">0</span> <small>μS/cm</small></div>
-                </div>
-
-                <div class="param-card salinity">
-                    <div class="card-header"><i data-feather="hexagon"></i> Salinitas</div>
-                    <div class="value"><span id="val-salt">0</span> <small>mg/L</small></div>
+                <div class="bento-env" aria-label="Iklim mikro tanah">
+                    <div class="env-cell">
+                        <span class="env-label"><i data-feather="thermometer"></i> Suhu tanah</span>
+                        <div class="value"><span id="val-temp">&mdash;</span> <small>&deg;C</small></div>
+                    </div>
+                    <div class="env-cell">
+                        <span class="env-label"><i data-feather="cloud-drizzle"></i> Kelembapan</span>
+                        <div class="value"><span id="val-hum">&mdash;</span> <small>%</small></div>
+                    </div>
+                    <div class="env-cell">
+                        <span class="env-label" title="Daya hantar listrik (EC)"><i data-feather="zap"></i> EC tanah</span>
+                        <div class="value"><span id="val-ec">&mdash;</span> <small>&micro;S/cm</small></div>
+                    </div>
+                    <div class="env-cell">
+                        <span class="env-label"><i data-feather="hexagon"></i> Salinitas</span>
+                        <div class="value"><span id="val-salt">&mdash;</span> <small>mg/L</small></div>
+                    </div>
                 </div>
             </div>
 
             <!-- Grafik -->
+            <div class="section-head">
+                <h2><span class="sec-no">02</span> Grafik pembacaan</h2>
+                <span class="section-note">60 titik terakhir</span>
+            </div>
             <div class="chart-container-wrapper">
                 <div class="chart-card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3><i data-feather="activity"></i> Monitoring Tanah</h3>
-                        <span class="live-tag">Real Time data</span>
-                        <button onclick="downloadCSV()" class="btn-download">
-                            <i data-feather="download"></i> Ekspor CSV
-                        </button>
+                    <div class="card-header">
+                        <div class="chart-title-group">
+                            <h3 id="live-chart-title">Nitrogen, Fosfor, Kalium</h3>
+                            <span class="live-tag">Live</span>
+                        </div>
+                        <div class="chart-tools">
+                            <div class="chart-filters" role="tablist" aria-label="Pilih besaran grafik" id="live-chart-tabs">
+                                <button type="button" class="filter-btn active" data-group="npk" onclick="setLiveChartGroup('npk')">NPK</button>
+                                <button type="button" class="filter-btn" data-group="ph" onclick="setLiveChartGroup('ph')">pH</button>
+                                <button type="button" class="filter-btn" data-group="temp" onclick="setLiveChartGroup('temp')">Suhu</button>
+                                <button type="button" class="filter-btn" data-group="hum" onclick="setLiveChartGroup('hum')">Kelembapan</button>
+                                <button type="button" class="filter-btn" data-group="ec" onclick="setLiveChartGroup('ec')">EC</button>
+                                <button type="button" class="filter-btn" data-group="salt" onclick="setLiveChartGroup('salt')">Salinitas</button>
+                            </div>
+                            <button onclick="downloadCSV()" class="btn-download">
+                                <i data-feather="download"></i> Ekspor CSV
+                            </button>
+                        </div>
                     </div>
                     <div class="canvas-wrapper">
-                        <canvas id="multiSensorChart"></canvas>
+                        <canvas id="multiSensorChart" aria-label="Grafik pembacaan sensor" role="img"></canvas>
+                        <div class="chart-empty" id="live-chart-empty"><i data-feather="activity"></i><span>Grafik muncul begitu data sensor pertama masuk.</span></div>
                     </div>
                 </div>
             </div>
 
-            <!-- input lebar media tanam -->
-             <div class="land-area-container">
-                <div class="land-area-title">
-                    <i data-feather="map"></i>
-                    <h3>Luas Lahan Aktual:</h3>
-                </div>
-                
-                <div class="land-input-group">
-                    <div class="land-input-wrapper">
-                        <input type="number" id="luas-lahan" placeholder="Contoh: 500" value="0">
-                        <span>m²</span>
-                    </div>
-                    <button id="btn-konfirmasi-lahan" class="btn-confirm-land" onclick="konfirmasiLuasLahan()">
-                        <i data-feather="check-circle"></i> Terapkan
-                    </button>
-                </div>
-
-                <p class="land-area-desc">Masukkan luas lahan. AI akan mengonversi dosis Hektar menjadi <strong>Gram/Kilogram</strong> yang 100% presisi untuk lahan Anda.</p>
+            <!-- Diagnosis & rekomendasi -->
+            <div class="section-head">
+                <h2><span class="sec-no">03</span> Diagnosis &amp; resep perbaikan</h2>
+                <span class="section-note">dihitung ulang tiap data masuk</span>
             </div>
-
-            <!-- Rekomendasi & Treatment -->
             <div class="analysis-grid">
                 <div class="box ai-analysis">
-                    <h3><i data-feather="cpu"></i> Analisis Cerdas AI</h3>
+                    <h3 class="box-title"><i data-feather="cpu"></i> Diagnosis AI</h3>
+                    <p class="box-sub">Kesimpulan kondisi lahan &amp; tanaman yang cocok.</p>
                     <ul id="ai-analysis-list">
-                        <li>Memuat analisis lahan...</li>
+                        <li>Memuat analisis lahan&hellip;</li>
                     </ul>
                 </div>
                 <div class="box recommendation-box">
-                    <h3><i data-feather="zap"></i> Rekomendasi Presisi</h3>
-                    <p id="ai-recom-text">Menunggu kalkulasi dari sensor...</p>
+                    <h3 class="box-title"><i data-feather="clipboard"></i> Rekomendasi presisi</h3>
+                    <p class="box-sub">Dosis pupuk &amp; amelioran untuk luas lahanmu.</p>
+                    <div id="ai-recom-text">Menunggu kalkulasi dari sensor&hellip;</div>
+
+                    <div class="land-area-container">
+                        <div class="land-area-inner">
+                            <div class="land-area-title">
+                                <i data-feather="maximize"></i>
+                                <h3><label for="luas-lahan">Luas lahan aktual</label></h3>
+                            </div>
+                            <div class="land-input-group">
+                                <div class="land-input-wrapper">
+                                    <input type="number" id="luas-lahan" placeholder="contoh: 500" value="0" min="0" inputmode="decimal">
+                                    <span>m&sup2;</span>
+                                </div>
+                                <button id="btn-konfirmasi-lahan" class="btn-confirm-land" onclick="konfirmasiLuasLahan()">
+                                    <i data-feather="check"></i> Terapkan
+                                </button>
+                            </div>
+                            <p class="land-area-desc">Dosis per hektar dikonversi ke <strong>gram/kilogram</strong> sesuai luas ini. Kosong = dihitung per 1 ha.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- fitur rekomendasi pengguna -->
-            <div class="box commodity-analysis-expert">
+            <!-- Analisis spesifik komoditas -->
+            <section class="box commodity-analysis-expert">
                 <div class="cae-header">
                     <div class="cae-title-wrapper">
-                        <h3><i data-feather="target"></i> Analisis Spesifik Komoditas</h3>
-                        <p>Bandingkan lahan dengan syarat tumbuh ideal tanaman target secara real-time.</p>
+                        <h3><i data-feather="target"></i> Cocokkan dengan rencana tanam</h3>
+                        <p>Bandingkan lahan dengan syarat tumbuh ideal tanaman target, lengkap dengan langkah perbaikannya.</p>
                     </div>
-                    <span class="badge-blue-pulse">Fitur Pakar</span>
+                    <span class="badge-blue-pulse">Fitur pakar</span>
                 </div>
-                
                 <div class="cae-input-section">
-                    <label>Pilih Rencana Tanam:</label>
-                    <button type="button" class="btn-select-plant" onclick="showPlantModal()">
-                        <span id="selected-plant-text">-- Pilih Tanaman Target --</span>
+                    <label for="btn-plant">Tanaman target</label>
+                    <button type="button" id="btn-plant" class="btn-select-plant" onclick="showPlantModal()">
+                        <span id="selected-plant-text">Pilih tanaman&hellip;</span>
                         <i data-feather="chevron-down"></i>
                     </button>
                 </div>
+                <div id="plant-specific-result" class="cae-result cae-empty-state"></div>
+            </section>
 
-                <div id="plant-specific-result" class="cae-result cae-empty-state">
-                    </div>
-            </div>
-
-            <!-- SECTION FOOTER -->
             <footer class="dashboard-footer">
-                    <div class="footer-content">
-                        <div class="footer-left">
-                            <p>&copy; 2026 <strong>Smart Farming Team</strong>. All rights reserved.</p>
-                            <span class="version">V 1.0.2 - Prototype Stage</span>
-                        </div>
-                        <div class="footer-right">
-                            <div class="footer-links">
-                                <a href="#"><i data-feather="help-circle"></i> Bantuan</a>
-                                <a href="#"><i data-feather="file-text"></i> Dokumentasi</a>
-                                <a href="https://fathirabid.github.io/soilscoring.github.io/" target="_blank"><i data-feather="github"></i> Repository</a>
-                            </div>
+                <div class="footer-content">
+                    <div class="footer-left">
+                        <p>&copy; 2026 <strong>AGROSKOR</strong> &middot; Smart Soil Scoring</p>
+                        <span class="version">v1.0.2 &middot; prototipe</span>
+                    </div>
+                    <div class="footer-right">
+                        <div class="footer-links">
+                            <a href="about.html"><i data-feather="file-text"></i> Dokumentasi</a>
+                            <a href="https://github.com/fathirabid/smartfarming.github.io" target="_blank" rel="noopener"><i data-feather="github"></i> Repository</a>
                         </div>
                     </div>
+                </div>
             </footer>
         </main>
     </div>

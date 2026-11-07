@@ -67,7 +67,7 @@ function showStatusModal(type, title, message) {
     const box = modal.querySelector('.status-box');
 
     if (type === 'success') {
-        icon.innerText = "✅"; box.className = "modal-content status-box success"; 
+        icon.innerText = ""; box.className = "modal-content status-box success"; 
     } else if (type === 'error') {
         icon.innerText = "❌"; box.className = "modal-content status-box error";
     } else {
@@ -270,7 +270,7 @@ function executeClearLogs(mode) {
     
     if (mode === 'all') {
         let totalLogs = historyDataArray.length;
-        if(confirm(`🚨 PERINGATAN KRITIS: Anda akan menghancurkan SELURUH database riwayat (${totalLogs}+ baris). Anda tidak dapat membatalkan ini.\n\nYakin untuk me-reset total?`)) {
+        if(confirm(`PERINGATAN: Anda akan menghancurkan SELURUH database riwayat (${totalLogs}+ baris). Anda tidak dapat membatalkan ini.\n\nYakin untuk me-reset total?`)) {
             database.ref('AgroskorPro/History').remove()
                 .then(() => { showToast('success', 'Reset Total Berhasil', 'Seluruh data riwayat telah dihapus dari server awan.'); })
                 .catch((error) => { showToast('error', 'Gagal', 'Terjadi kesalahan sistem.'); });
@@ -415,7 +415,7 @@ function updateChartFilter(range) {
     currentFilterRange = range;
     
     // Update warna tombol aktif
-    const btns = document.querySelectorAll('.filter-btn');
+    const btns = document.querySelectorAll('#history-range-tabs .filter-btn');
     if (btns.length > 0) {
         btns.forEach(btn => btn.classList.remove('active'));
         if(range === 'today') btns[0].classList.add('active');
@@ -478,34 +478,76 @@ function renderHistoryChart(dataArr) {
         dK.push(d.kalium);
         
         // 2. Masukkan angka dari Firebase ke dalam penampung
-        dpH.push(parseFloat(d.ph).toFixed(2).replace('.', ','));
-        dHum.push(parseFloat(d.hum).toFixed(2).replace('.', ','));
+        // Harus angka (bukan string "6,50") agar Chart.js bisa menggambar garisnya
+        dpH.push(Number(parseFloat(d.ph).toFixed(2)));
+        dHum.push(Number(parseFloat(d.hum).toFixed(2)));
     });
 
     if (historyTrendChart) historyTrendChart.destroy(); // Bersihkan kanvas lama
 
     // Atur warna bawaan Chart.js untuk mode gelap
-    Chart.defaults.color = '#cbd5e1'; 
-    Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+    // Tema grafik: tinta di atas kertas (selaras style.css)
+    Chart.defaults.color = '#6f695c';
+    Chart.defaults.borderColor = '#e0d8c8';
+    Chart.defaults.font.family = "'IBM Plex Mono', ui-monospace, monospace";
+    Chart.defaults.font.size = 11;
+
+    const cfg = HISTORY_METRICS[currentHistoryMetric] || HISTORY_METRICS.score;
+    const line = (color, extra) => Object.assign({
+        borderColor: color, backgroundColor: color, borderWidth: 2, tension: 0.35,
+        pointRadius: 0, pointHoverRadius: 4, pointHoverBorderWidth: 2, pointHoverBorderColor: '#fbf9f4'
+    }, extra || {});
+    const all = [
+        Object.assign({ label: 'Skor kesuburan', data: dScore }, line('#2f5d28', { fill: true, backgroundColor: 'rgba(47, 93, 40, 0.08)' })),
+        Object.assign({ label: 'Nitrogen (N)', data: dN }, line('#2a78d6')),
+        Object.assign({ label: 'Fosfor (P)', data: dP }, line('#eb6834')),
+        Object.assign({ label: 'Kalium (K)', data: dK }, line('#1baf7a')),
+        Object.assign({ label: 'pH tanah', data: dpH }, line('#2f5d28')),
+        Object.assign({ label: 'Kelembapan (%)', data: dHum }, line('#2f5d28'))
+    ];
+    all.forEach((ds, i) => { ds.hidden = !cfg.idx.includes(i); });
 
     historyTrendChart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: lbls,
-            datasets: [
-                { label: ' 🌟 Skor', data: dScore, borderColor: '#facc15', backgroundColor: 'rgba(250, 204, 21, 0.15)', borderWidth: 3, fill: true, tension: 0.4 },
-                { label: ' Nitrogen (N)', data: dN, borderColor: '#2ecc71', borderWidth: 2, tension: 0.4, borderDash: [5, 5] },
-                { label: ' Fosfor (P)', data: dP, borderColor: '#e67e22', borderWidth: 2, tension: 0.4, borderDash: [5, 5] },
-                { label: ' Kalium (K)', data: dK, borderColor: '#3498db', borderWidth: 2, tension: 0.4, borderDash: [5, 5] },
-                { label: ' pH Tanah', data: dpH, borderColor: '#f1c40f', borderWidth: 2, tension: 0.4 },
-                { label: ' Kelembapan (%)', data: dHum, borderColor: '#9b59b6', borderWidth: 2, tension: 0.4 }
-            ]
-        },
+        data: { labels: lbls, datasets: all },
         options: {
             responsive: true, maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
-            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } } },
-            scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
+            plugins: {
+                legend: {
+                    display: cfg.idx.length > 1, position: 'top', align: 'start',
+                    labels: { usePointStyle: true, pointStyle: 'rectRounded', boxWidth: 10, boxHeight: 10, padding: 16,
+                              filter: (item, chartData) => !chartData.datasets[item.datasetIndex].hidden },
+                    onClick: () => {}
+                },
+                tooltip: { backgroundColor: '#1d1c18', titleColor: '#f2eee4', bodyColor: '#f2eee4', padding: 10, cornerRadius: 8, boxPadding: 4, usePointStyle: true }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 8, maxRotation: 0 } },
+                y: Object.assign({ border: { display: false }, grid: { color: '#ebe5d8' }, ticks: { padding: 8 } }, cfg.y)
+            }
         }
     });
+}
+
+// Satu grafik = satu satuan: pilih besaran yang ditampilkan
+const HISTORY_METRICS = {
+    score: { idx: [0], title: 'Tren skor kesuburan', y: { min: 0, max: 100 } },
+    npk:   { idx: [1, 2, 3], title: 'Tren Nitrogen, Fosfor, Kalium (mg/kg)', y: { beginAtZero: true } },
+    ph:    { idx: [4], title: 'Tren pH tanah', y: { grace: '10%' } },
+    hum:   { idx: [5], title: 'Tren kelembapan tanah (%)', y: { grace: '10%' } }
+};
+let currentHistoryMetric = 'score';
+
+function setHistoryMetric(metric) {
+    if (!HISTORY_METRICS[metric]) return;
+    currentHistoryMetric = metric;
+    document.querySelectorAll('#history-metric-tabs .filter-btn').forEach(btn => {
+        const on = btn.dataset.metric === metric;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    const titleEl = document.getElementById('history-chart-title');
+    if (titleEl) titleEl.textContent = HISTORY_METRICS[metric].title;
+    updateChartFilter(currentFilterRange);
 }

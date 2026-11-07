@@ -190,7 +190,7 @@ function initMap() {
     deviceMarker = L.marker(defaultLocation, { icon: offlineIcon }).addTo(map);
     deviceMarker.bindPopup(`
         <div class="popup-title"><i data-feather="crosshair"></i> Prototipe AGROSKOR</div>
-        <div style="font-size:12px; color:#64748b;">Lokasi ini diperbarui otomatis oleh GPS Neo M8N.</div>
+        <div style="font-size:12px; color:#6f695c;">Lokasi ini diperbarui otomatis oleh GPS Neo M8N.</div>
     `);
 
     // Mulai melacak Firebase setelah peta siap
@@ -243,7 +243,7 @@ function fetchLiveGpsData() {
             if (isDataFresh) {
                 if(hudScore) {
                     hudScore.innerText = score + " / 100";
-                    hudScore.style.color = score > 80 ? "#2ecc71" : (score > 50 ? "#f39c12" : "#e74c3c");
+                    hudScore.style.color = score > 80 ? "var(--good)" : (score > 50 ? "var(--warn)" : "var(--crit)");
                 }
                 if(hudPh) hudPh.innerText = ph;
             }
@@ -265,11 +265,11 @@ function fetchLiveGpsData() {
 
                 if (isDataFresh) {
                     deviceMarker.setIcon(liveRadarIcon); 
-                    if(hudStatus) { hudStatus.innerText = "Satelit Terkunci (Live Tracking)"; hudStatus.style.color = "#2ecc71"; }
+                    if(hudStatus) { hudStatus.innerText = "Satelit Terkunci (Live Tracking)"; hudStatus.style.color = "var(--good)"; }
                     if(indicator) indicator.className = "pulse-indicator pulse-active";
                 } else {
                     deviceMarker.setIcon(offlineIcon); 
-                    if(hudStatus) { hudStatus.innerText = "Menghubungkan ke Alat..."; hudStatus.style.color = "#f39c12"; }
+                    if(hudStatus) { hudStatus.innerText = "Menghubungkan ke Alat..."; hudStatus.style.color = "var(--warn)"; }
                     if(indicator) indicator.className = "pulse-indicator"; 
                 }
 
@@ -278,12 +278,12 @@ function fetchLiveGpsData() {
                 deviceMarker.setIcon(offlineIcon); 
                 if(hudLat) hudLat.innerText = "Mencari...";
                 if(hudLng) hudLng.innerText = "Mencari...";
-                if(hudStatus) { hudStatus.innerText = "Mencari Sinyal GPS..."; hudStatus.style.color = "#f39c12"; }
+                if(hudStatus) { hudStatus.innerText = "Mencari Sinyal GPS..."; hudStatus.style.color = "var(--warn)"; }
                 if(indicator) indicator.className = "pulse-indicator"; 
                 
                 // Jika data belum fresh saat baru refresh, jadikan status menunggu
                 if (!isDataFresh) {
-                    if(hudScore) { hudScore.innerText = "MENUNGGU..."; hudScore.style.color = "#f39c12"; }
+                    if(hudScore) { hudScore.innerText = "MENUNGGU..."; hudScore.style.color = "var(--warn)"; }
                     if(hudPh) hudPh.innerText = "--";
                 }
             }
@@ -291,9 +291,9 @@ function fetchLiveGpsData() {
             // 4. BOM WAKTU 10 DETIK (Jika alat tiba-tiba mati / dicabut listriknya)
             mapWatchdogTimer = setTimeout(() => {
                 deviceMarker.setIcon(offlineIcon); 
-                if(hudStatus) { hudStatus.innerText = "Koneksi Terputus / ESP32 Mati"; hudStatus.style.color = "#e74c3c"; }
+                if(hudStatus) { hudStatus.innerText = "Koneksi Terputus / ESP32 Mati"; hudStatus.style.color = "var(--crit)"; }
                 if(indicator) indicator.className = "pulse-indicator"; 
-                if(hudScore) { hudScore.innerText = "OFFLINE"; hudScore.style.color = "#e74c3c"; }
+                if(hudScore) { hudScore.innerText = "OFFLINE"; hudScore.style.color = "var(--crit)"; }
                 if(hudPh) hudPh.innerText = "--";
             }, 10000); 
         }

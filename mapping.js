@@ -124,8 +124,10 @@ function applyAdminState(loginStatus) {
     const adminView = document.getElementById('admin-view');
     const guestWarning = document.getElementById('guest-warning');
     const mapBox = document.getElementById('map-content-box');
+    const geoBox = document.getElementById('geoai-box');
     
     if (isLoggedIn) {
+        if (geoBox) geoBox.style.display = 'block';
         if (guestView) guestView.style.display = 'none';
         if (adminView) adminView.style.display = 'block';
         if (guestWarning) guestWarning.style.display = 'none';
@@ -138,6 +140,7 @@ function applyAdminState(loginStatus) {
         if (guestWarning) guestWarning.style.display = 'block';
         
         if (mapBox) mapBox.style.display = 'none';
+        if (geoBox) geoBox.style.display = 'none';
     }
 }
 
@@ -195,6 +198,7 @@ function initMap() {
 
     // Mulai melacak Firebase setelah peta siap
     fetchLiveGpsData();
+    initGeoAI();
 }
 
 // --- FUNGSI PELACAKAN DARI FIREBASE DENGAN ANTI-GHOSTING PINTAR ---
@@ -253,11 +257,10 @@ function fetchLiveGpsData() {
                 const newLatLng = new L.LatLng(lat, lng);
                 deviceMarker.setLatLng(newLatLng);
                 
-                if (isFirstLoad) {
-                    map.setView(newLatLng, 18); 
-                    isFirstLoad = false;
-                } else if (isDataFresh) {
-                    map.panTo(newLatLng); 
+                // Peta hanya mengikuti alat jika dicentang, supaya tidak mengganggu tampilan zona
+                if (ikutiAlat) {
+                    if (isFirstLoad) { map.setView(newLatLng, 18); isFirstLoad = false; }
+                    else if (isDataFresh) map.panTo(newLatLng);
                 }
 
                 if(hudLat) hudLat.innerText = lat.toFixed(6);
@@ -323,3 +326,148 @@ function handleProfilePosition() {
 
 window.addEventListener('load', handleProfilePosition);
 window.addEventListener('resize', handleProfilePosition);
+
+// ==========================================================
+// 4. GeoAI: ZONA KESUBURAN (K-MEANS), IDW, DAN REKAP DOLOMIT
+// ==========================================================
+let ikutiAlat = false;
+let titikAlat = [];
+let sumberAktif = null;
+let lapisTitik = null;
+let lapisIdw = null;
+
+function esc(v) {
+    return String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function angka(v, d = 2) {
+    return Number(v).toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+
+function initGeoAI() {
+    const elSumber = document.getElementById('geoai-sumber');
+    const elK = document.getElementById('geoai-k');
+    const elIdw = document.getElementById('geoai-idw');
+    const elIkuti = document.getElementById('geoai-ikuti');
+    if (!elSumber) return;
+    elSumber.addEventListener('change', () => { sumberAktif = elSumber.value; renderGeoAI(true); });
+    elK.addEventListener('change', () => renderGeoAI(false));
+    elIdw.addEventListener('change', () => renderGeoAI(false));
+    elIkuti.addEventListener('change', () => { ikutiAlat = elIkuti.checked; if (ikutiAlat) isFirstLoad = true; });
+
+    database.ref('AgroskorPro/History').limitToLast(500).on('value', (snapshot) => {
+        titikAlat = [];
+        snapshot.forEach((c) => {
+            const d = c.val() || {};
+            const lat = Number(d.lat), lng = Number(d.lng), ph = Number(d.ph), ec = Number(d.ec);
+            const gpsOk = d.gps_valid === true || (d.gps_valid === undefined && lat !== 0 && lng !== 0);
+            if (gpsOk && isFinite(lat) && isFinite(lng) && lat !== 0 && lng !== 0 && isFinite(ph) && d.ec !== undefined && isFinite(ec)) {
+                titikAlat.push({ ...d, lat, lng, ph, ec, hum: Number(d.hum), sumber: 'ALAT' });
+            }
+        });
+        const opsiAlat = elSumber.querySelector('option[value="alat"]');
+        if (opsiAlat) opsiAlat.textContent = `Riwayat alat (${titikAlat.length} titik ber-GPS)`;
+        if (sumberAktif === null) {
+            sumberAktif = titikAlat.length >= 3 ? 'alat' : 'simulasi';
+            elSumber.value = sumberAktif;
+            renderGeoAI(true);
+        } else if (sumberAktif === 'alat') {
+            renderGeoAI(false);
+        }
+    });
+}
+
+function ambilTitik() {
+    if (sumberAktif === 'simulasi') {
+        return (window.TITIK_SIMULASI || []).map(d => ({ ...d, ph: Number(d.ph), ec: Number(d.ec), lat: Number(d.lat), lng: Number(d.lng), hum: Number(d.hum) }));
+    }
+    return titikAlat;
+}
+
+function renderGeoAI(sesuaikanPeta) {
+    if (!map) return;
+    const titik = ambilTitik();
+    const kPilihan = document.getElementById('geoai-k').value;
+    const pakaiIdw = document.getElementById('geoai-idw').checked;
+    const info = document.getElementById('geoai-info');
+    const legend = document.getElementById('geoai-legend');
+    const legendIdw = document.getElementById('geoai-legend-idw');
+    const rekap = document.getElementById('geoai-rekap');
+    const badge = document.getElementById('geoai-sumber-badge');
+
+    if (lapisTitik) { map.removeLayer(lapisTitik); lapisTitik = null; }
+    if (lapisIdw) { map.removeLayer(lapisIdw); lapisIdw = null; }
+
+    if (sumberAktif === 'simulasi') { badge.textContent = 'DATA SIMULASI, bukan hasil pengukuran'; badge.classList.add('is-sim'); }
+    else { badge.textContent = `Data alat, ${titik.length} titik`; badge.classList.remove('is-sim'); }
+    legendIdw.hidden = !pakaiIdw;
+
+    if (titik.length === 0) {
+        info.textContent = 'Belum ada titik ber-GPS di riwayat alat. Pilih "Data simulasi" untuk melihat demonstrasi.';
+        legend.innerHTML = '';
+        rekap.innerHTML = '<tr><td colspan="8">Belum ada titik ukur.</td></tr>';
+        return;
+    }
+
+    const zon = GeoAI.zonakan(titik, kPilihan);
+    const R = AGROSKOR_RULES;
+
+    // Lapisan IDW (digambar dulu supaya berada di bawah titik)
+    let galatIdw = null;
+    if (pakaiIdw && titik.length >= 2) {
+        const renderer = L.canvas({ padding: 0.5 });
+        lapisIdw = L.layerGroup(GeoAI.idwGrid(titik).map(c => L.rectangle(c.bounds, {
+            renderer, stroke: false, fillColor: GeoAI.warnaPh(c.ph), fillOpacity: 0.28, interactive: false
+        }))).addTo(map);
+        galatIdw = GeoAI.ujiIdw(titik);
+    }
+
+    // Titik ukur berwarna sesuai zona
+    const penanda = titik.map((t, i) => {
+        const z = zon ? zon.zona[zon.label[i]] : null;
+        const b = { ph: t.ph, ec: t.ec, kel: t.hum, n: Number(t.nitrogen), p: Number(t.fosfor), k: Number(t.kalium) };
+        const skor = t.score !== undefined ? t.score : R.skorKesuburan(b);
+        const inf = R.inferensi(b);
+        const tindakan = t.tindakan || inf.aturan.map(a => a.tindakan).join(' + ');
+        const dolomit = t.dolomit_g !== undefined ? Number(t.dolomit_g) : inf.dolomitGram;
+        const popup = `<div class="geoai-popup">
+            <strong>${esc(t.id_titik !== undefined ? (String(t.id_titik).startsWith('SIM') ? t.id_titik : '#' + t.id_titik) : 'Titik')}</strong>${t.sumber === 'SIMULASI' ? ' <em>(simulasi)</em>' : ''}<br>
+            ${z ? `Zona ${z.nomor}: ${esc(z.nama)}<br>` : ''}
+            pH ${angka(t.ph)} (${esc(R.labelPh(t.ph).toLowerCase())}), EC ${Math.round(t.ec)} &micro;S/cm<br>
+            Skor ${esc(skor)}, dolomit ${dolomit} g per pot<br>
+            Tindakan: ${esc(tindakan)}
+        </div>`;
+        return L.circleMarker([t.lat, t.lng], {
+            radius: 8, color: '#1d1c18', weight: 1, fillColor: z ? z.warna : '#8a857a', fillOpacity: 0.92
+        }).bindPopup(popup);
+    });
+    lapisTitik = L.featureGroup(penanda).addTo(map);
+    if (sesuaikanPeta && !ikutiAlat) map.fitBounds(lapisTitik.getBounds(), { padding: [40, 40], maxZoom: 17 });
+
+    // Ringkasan metode
+    let teks = `${titik.length} titik`;
+    if (zon) teks += ` · k = ${zon.k}${kPilihan === 'otomatis' ? ' (dipilih otomatis)' : ''} · silhouette ${angka(zon.silhouette)}`;
+    else teks += ' · minimal 3 titik untuk membentuk zona';
+    if (galatIdw !== null) teks += ` · galat rata-rata IDW (uji leave-one-out) ±${angka(galatIdw)} pH`;
+    info.textContent = teks;
+
+    // Keterangan zona
+    legend.innerHTML = zon ? zon.zona.map(z => `<li><span class="sw" style="background:${z.warna}"></span><span><strong>Zona ${z.nomor}</strong>: ${esc(z.nama)} (${z.jumlah} titik)</span></li>`).join('') : '';
+
+    // Rekap dolomit per zona
+    const DOSIS = R.DOSIS.DOLOMIT;
+    const kelompok = zon ? zon.zona.map(z => ({ z, anggota: titik.filter((_, i) => zon.label[i] === z.nomor - 1) }))
+                         : [{ z: { nomor: '-', warna: '#8a857a' }, anggota: titik }];
+    let tot = { n: 0, butuh: 0, seragam: 0, pres: 0 };
+    const baris = kelompok.map(({ z, anggota }) => {
+        const n = anggota.length;
+        const butuh = anggota.filter(t => t.ph < R.BATAS.PH_MIN).length;
+        const seragam = n * DOSIS, pres = butuh * DOSIS;
+        tot.n += n; tot.butuh += butuh; tot.seragam += seragam; tot.pres += pres;
+        const ph = anggota.reduce((s, t) => s + t.ph, 0) / n, ec = anggota.reduce((s, t) => s + t.ec, 0) / n;
+        const selisih = seragam ? Math.round((1 - pres / seragam) * 100) : 0;
+        return `<tr><td><span class="sw-inline" style="background:${z.warna}"></span> Zona ${z.nomor}</td><td>${n}</td><td>${angka(ph)}</td><td>${Math.round(ec)}</td><td>${butuh}</td><td>${seragam} g</td><td>${pres} g</td><td>${selisih}%</td></tr>`;
+    });
+    const selisihTot = tot.seragam ? Math.round((1 - tot.pres / tot.seragam) * 100) : 0;
+    baris.push(`<tr class="row-total"><td><strong>Total</strong></td><td><strong>${tot.n}</strong></td><td></td><td></td><td><strong>${tot.butuh}</strong></td><td><strong>${tot.seragam} g</strong></td><td><strong>${tot.pres} g</strong></td><td><strong>${selisihTot}%</strong></td></tr>`);
+    rekap.innerHTML = baris.join('');
+}

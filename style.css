@@ -1566,3 +1566,49 @@ canvas { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+
+/* ==========================================================
+   AGROSKOR v3: sistem pakar dan GeoAI
+   ========================================================== */
+.rule-why { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--muted, #6f695c); margin-top: 2px; font-weight: 400; }
+.recom-source { margin-top: 10px; font-size: 12px; color: var(--muted, #6f695c); }
+.plant-note { margin-top: 10px; font-size: 12px; color: var(--muted, #6f695c); line-height: 1.5; }
+.batas-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+.batas-table th, .batas-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid rgba(29, 28, 24, 0.1); vertical-align: top; }
+.batas-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); font-weight: 600; }
+.cell-tindakan { min-width: 220px; white-space: normal; }
+
+/* Panel GeoAI di halaman Peta */
+.geoai-panel { margin-top: 14px; }
+.geoai-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.geoai-badge { font-family: 'IBM Plex Mono', monospace; font-size: 12px; padding: 5px 10px; border-radius: 6px; background: var(--info-soft); color: var(--info); white-space: nowrap; }
+.geoai-badge.is-sim { background: var(--warn-soft); color: var(--warn); }
+.geoai-controls { display: flex; flex-wrap: wrap; gap: 14px 22px; align-items: flex-end; margin: 16px 0 10px; }
+.geoai-controls label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); }
+.geoai-controls select { font: inherit; font-size: 14px; color: var(--ink); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(29, 28, 24, 0.18); background: var(--surface); }
+.geoai-controls .geoai-check { flex-direction: row; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); padding-bottom: 8px; }
+.geoai-info { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin: 0 0 16px; }
+.geoai-grid { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 24px; }
+.geoai-subtitle { font-size: 13px; margin: 0 0 8px; }
+.geoai-legend { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.geoai-legend li { display: flex; align-items: flex-start; gap: 8px; line-height: 1.4; }
+.geoai-legend .sw { flex: 0 0 14px; height: 14px; border-radius: 4px; margin-top: 2px; border: 1px solid rgba(29, 28, 24, 0.25); }
+.geoai-table td, .geoai-table th { white-space: nowrap; }
+.geoai-table th:first-child, .geoai-table td:first-child { padding-left: 12px; }
+.geoai-note { font-size: 12px; color: var(--muted); margin: 14px 0 0; line-height: 1.5; }
+.geoai-popup { font-size: 12px; line-height: 1.5; }
+.geoai-popup strong { font-size: 13px; }
+@media (max-width: 860px) { .geoai-grid { grid-template-columns: 1fr; } }
+.sw-inline { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; border: 1px solid rgba(29, 28, 24, 0.25); vertical-align: -1px; }
+.geoai-table .row-total td { border-top: 1px solid rgba(29, 28, 24, 0.2); }
+/* Aturan canvas global di atas membuat lapisan canvas Leaflet mengecil, jadi dikecualikan */
+.leaflet-container canvas { max-width: none !important; }
+.geoai-grid > div { min-width: 0; }
+.geoai-table { font-size: 13px; }
+.geoai-table th { white-space: normal; }
+.geoai-table th, .geoai-table td { padding: 10px 8px; }
+.geoai-table th:first-child, .geoai-table td:first-child { padding-left: 10px; }
+.dose-list li.dose-v3 { display: block; }
+.dose-v3 .dose-name { display: block; }
+.dose-v3 .dose-amount { display: block; white-space: normal; font-size: 14px; margin-top: 3px; }

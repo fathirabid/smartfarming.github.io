@@ -157,38 +157,13 @@
                     <div class="box settings-card">
                         <div class="settings-header">
                             <div class="icon-wrap"><i data-feather="sliders"></i></div>
-                            <h3>Ambang batas hara</h3>
+                            <h3>Ambang batas sistem pakar</h3>
                         </div>
-                        <p class="settings-desc">Atur batas minimum unsur hara sebelum AI memicu peringatan status Kritis.</p>
-                        <form onsubmit="saveThresholds(event)" class="settings-form">
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>Min. nitrogen (mg/kg)</label>
-                                    <input type="number" id="thresh-n" value="50" min="0" required>
-                                </div>
-                                <div class="input-group">
-                                    <label>Min. fosfor (mg/kg)</label>
-                                    <input type="number" id="thresh-p" value="20" min="0" required>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>Min. kalium (mg/kg)</label>
-                                    <input type="number" id="thresh-k" value="100" min="0" required>
-                                </div>
-                                <div class="input-group">
-                                    <label>pH minimum (asam)</label>
-                                    <input type="number" id="thresh-ph" value="5.5" step="0.1" required>
-                                </div>
-                                <div class="input-group">
-                                    <label>pH maksimum (basa)</label>
-                                    <input type="number" id="thresh-ph-max" value="7.0" step="0.1" required>
-                                </div>
-
-                            </div>
-                            <button type="submit" class="btn-save"><i data-feather="save"></i> Simpan kalibrasi</button>
-                        </form>
+                        <p class="settings-desc">Batas ini dipakai sistem pakar di alat (file <code>agroskor_ai.h</code>) dan di web. Untuk mengubahnya, ubah firmware lalu upload ulang ke ESP32, kemudian samakan <code>agroskor-rules.js</code>.</p>
+                        <table class="batas-table">
+                            <thead><tr><th>Parameter</th><th>Batas</th><th>Dasar</th></tr></thead>
+                            <tbody id="batas-body"></tbody>
+                        </table>
                     </div>
 
                     <div class="box settings-card">
@@ -231,7 +206,7 @@
                             <div class="control-item">
                                 <div class="control-info">
                                     <strong>Restart prototipe</strong>
-                                    <span>Lakukan reboot jarak jauh jika alat macet.</span>
+                                    <span>Reboot jarak jauh jika alat macet. Hanya berfungsi jika <code>IZINKAN_REBOOT_WEB</code> di firmware bernilai 1 (bawaan: mati).</span>
                                 </div>
                                 <button type="button" onclick="showRebootModal()" class="btn-danger-outline"><i data-feather="refresh-cw"></i> Restart ESP32</button>
                             </div>
@@ -261,6 +236,7 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="agroskor-rules.js"></script>
     <script src="setting.js"></script>
 </body>
 </html>

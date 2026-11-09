@@ -131,9 +131,9 @@
             <a href="index.html" class="mobile-brand" aria-label="AGROSKOR"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span>AGROSKOR</span></a>
             <header class="top-bar">
                 <div class="header-title">
-                    <span class="eyebrow">Geolokasi &middot; GPS NEO-M8N</span>
+                    <span class="eyebrow">GeoAI &middot; GPS NEO-M8N</span>
                     <h1>Peta Lahan</h1>
-                    <p>Posisi alat AGROSKOR di lahan, diperbarui langsung dari satelit.</p>
+                    <p>Posisi alat, zona kesuburan hasil k-means, dan perkiraan pH di sekitar titik ukur.</p>
                 </div>
             </header>
 
@@ -146,7 +146,7 @@
 
             <div class="map-container box" id="map-content-box" style="display: none;">
                 <div class="map-header-bar">
-                    <h3><i data-feather="crosshair"></i> Pelacakan langsung</h3>
+                    <h3><i data-feather="crosshair"></i> Peta titik ukur dan pelacakan alat</h3>
                     <span class="live-tag">Live</span>
                 </div>
                 
@@ -187,6 +187,64 @@
                 </div>
             </div>
 
+            <section class="box geoai-panel" id="geoai-box" style="display: none;">
+                <div class="geoai-head">
+                    <div>
+                        <h3 class="box-title"><i data-feather="layers"></i> Zona kesuburan (GeoAI)</h3>
+                        <p class="box-sub">Titik ukur dikelompokkan dengan k-means berdasarkan pH dan EC.</p>
+                    </div>
+                    <span class="geoai-badge" id="geoai-sumber-badge">Memuat&hellip;</span>
+                </div>
+
+                <div class="geoai-controls">
+                    <label>Sumber data
+                        <select id="geoai-sumber">
+                            <option value="alat">Riwayat alat (History)</option>
+                            <option value="simulasi">Data simulasi</option>
+                        </select>
+                    </label>
+                    <label>Jumlah zona
+                        <select id="geoai-k">
+                            <option value="otomatis">Otomatis (silhouette)</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </label>
+                    <label class="geoai-check"><input type="checkbox" id="geoai-idw"> Perkiraan pH (IDW)</label>
+                    <label class="geoai-check"><input type="checkbox" id="geoai-ikuti"> Ikuti posisi alat</label>
+                </div>
+
+                <p class="geoai-info" id="geoai-info">Menunggu data titik ukur&hellip;</p>
+
+                <div class="geoai-grid">
+                    <div>
+                        <h4 class="geoai-subtitle">Keterangan zona</h4>
+                        <ul class="geoai-legend" id="geoai-legend"></ul>
+                        <div class="geoai-legend-idw" id="geoai-legend-idw" hidden>
+                            <h4 class="geoai-subtitle">Perkiraan pH (IDW)</h4>
+                            <ul class="geoai-legend">
+                                <li><span class="sw" style="background:#a63b25"></span> Di bawah 5,6 (perlu dolomit)</li>
+                                <li><span class="sw" style="background:#2e6f2f"></span> 5,6 sampai 6,5 (ideal bawang merah)</li>
+                                <li><span class="sw" style="background:#2b6299"></span> Di atas 6,5</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="geoai-subtitle">Rekap kebutuhan dolomit per zona</h4>
+                        <div class="table-responsive">
+                            <table class="history-table geoai-table">
+                                <thead><tr><th>Zona</th><th>Titik</th><th>pH rata-rata</th><th>EC rata-rata</th><th>Butuh dolomit</th><th>Seragam</th><th>Preskripsi</th><th>Selisih</th></tr></thead>
+                                <tbody id="geoai-rekap"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="geoai-note">Satu titik ukur dihitung sebagai satu pot. Bantuan seragam memberi dolomit 13 g ke semua pot, sedangkan preskripsi hanya ke pot dengan pH di bawah 5,6 (Juknis BPTP Jakarta 2018). Perkiraan IDW hanya digambar sampai 1,2 km dari titik ukur terdekat dan bukan hasil pengukuran.</p>
+            </section>
+
             <footer class="dashboard-footer">
                 <div class="footer-content">
                     <div class="footer-left">
@@ -204,6 +262,9 @@
         </main>
     </div>
     
+    <script src="agroskor-rules.js"></script>
+    <script src="geoai.js"></script>
+    <script src="data-simulasi.js"></script>
     <script src="mapping.js"></script>
 </body>
 </html>

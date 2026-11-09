@@ -141,30 +141,11 @@
                             <i data-feather="rotate-ccw"></i> Kosongkan pilihan
                         </button>
                         <div class="plant-category">
-                            <h4>Hortikultura (Sayur & Buah)</h4>
+                            <h4>Crop library (sudah ada rujukan)</h4>
                             <div class="plant-grid">
-                                <div class="plant-card" onclick="selectPlant('cabai', 'Cabai Merah')">Cabai Merah</div>
-                                <div class="plant-card" onclick="selectPlant('tomat', 'Tomat')">Tomat</div>
                                 <div class="plant-card" onclick="selectPlant('bawang', 'Bawang Merah')">Bawang Merah</div>
                             </div>
-                        </div>
-                        <div class="plant-category">
-                            <h4>Hortikultura (Sayuran Daun)</h4>
-                            <div class="plant-grid">
-                                <div class="plant-card" onclick="selectPlant('Bayam', 'Bayam')">Bayam</div>
-                                <div class="plant-card" onclick="selectPlant('kangkung', 'Kangkung')">Kangkung</div>
-                                <div class="plant-card" onclick="selectPlant('sawi', 'Sawi (Caisim)')">Sawi (Caisim)</div>
-                                <div class="plant-card" onclick="selectPlant('selada', 'Selada')">Selada</div>
-                                <div class="plant-card" onclick="selectPlant('kubis', 'Kubis')">Kubis</div>
-                            </div>
-                        </div>
-                        <div class="plant-category">
-                            <h4>Pangan & Palawija</h4>
-                            <div class="plant-grid">
-                                <div class="plant-card" onclick="selectPlant('padi', 'Padi Sawah')">Padi Sawah</div>
-                                <div class="plant-card" onclick="selectPlant('jagung', 'Jagung Manis')">Jagung Manis</div>
-                                <div class="plant-card" onclick="selectPlant('singkong', 'Singkong')">Singkong</div>
-                            </div>
+                            <p class="plant-note">Rentang pH bawang merah 5,6 sampai 6,5 dari Juknis BPTP Jakarta (2018). Komoditas lain ditambahkan setelah ada rujukannya, supaya saran di web sama dengan sistem pakar di alat.</p>
                         </div>
                     </div>
                 </div>
@@ -336,37 +317,37 @@
             <!-- Diagnosis & rekomendasi -->
             <div class="section-head">
                 <h2><span class="sec-no">03</span> Diagnosis &amp; resep perbaikan</h2>
-                <span class="section-note">dihitung ulang tiap data masuk</span>
+                <span class="section-note">aturan sama dengan sistem pakar di alat</span>
             </div>
             <div class="analysis-grid">
                 <div class="box ai-analysis">
-                    <h3 class="box-title"><i data-feather="cpu"></i> Diagnosis AI</h3>
-                    <p class="box-sub">Kesimpulan kondisi lahan &amp; tanaman yang cocok.</p>
+                    <h3 class="box-title"><i data-feather="cpu"></i> Diagnosis sistem pakar</h3>
+                    <p class="box-sub">Kesimpulan, alasan, dan kesesuaian komoditas.</p>
                     <ul id="ai-analysis-list">
                         <li>Memuat analisis lahan&hellip;</li>
                     </ul>
                 </div>
                 <div class="box recommendation-box">
                     <h3 class="box-title"><i data-feather="clipboard"></i> Rekomendasi presisi</h3>
-                    <p class="box-sub">Dosis pupuk &amp; amelioran untuk luas lahanmu.</p>
+                    <p class="box-sub">Dosis per pot dari Juknis, dikali jumlah pot.</p>
                     <div id="ai-recom-text">Menunggu kalkulasi dari sensor&hellip;</div>
 
                     <div class="land-area-container">
                         <div class="land-area-inner">
                             <div class="land-area-title">
                                 <i data-feather="maximize"></i>
-                                <h3><label for="luas-lahan">Luas lahan aktual</label></h3>
+                                <h3><label for="luas-lahan">Jumlah pot</label></h3>
                             </div>
                             <div class="land-input-group">
                                 <div class="land-input-wrapper">
-                                    <input type="number" id="luas-lahan" placeholder="contoh: 500" value="0" min="0" inputmode="decimal">
-                                    <span>m&sup2;</span>
+                                    <input type="number" id="luas-lahan" placeholder="contoh: 20" value="1" min="1" step="1" inputmode="numeric">
+                                    <span>pot</span>
                                 </div>
                                 <button id="btn-konfirmasi-lahan" class="btn-confirm-land" onclick="konfirmasiLuasLahan()">
                                     <i data-feather="check"></i> Terapkan
                                 </button>
                             </div>
-                            <p class="land-area-desc">Dosis per hektar dikonversi ke <strong>gram/kilogram</strong> sesuai luas ini. Kosong = dihitung per 1 ha.</p>
+                            <p class="land-area-desc">Dosis Juknis dihitung <strong>per pot</strong>, lalu dikali jumlah pot ini.</p>
                         </div>
                     </div>
                 </div>
@@ -377,7 +358,7 @@
                 <div class="cae-header">
                     <div class="cae-title-wrapper">
                         <h3><i data-feather="target"></i> Cocokkan dengan rencana tanam</h3>
-                        <p>Bandingkan lahan dengan syarat tumbuh ideal tanaman target, lengkap dengan langkah perbaikannya.</p>
+                        <p>Bandingkan lahan dengan komoditas di crop library, lengkap dengan langkah perbaikan dari sistem pakar.</p>
                     </div>
                     <span class="badge-blue-pulse">Fitur pakar</span>
                 </div>
@@ -408,6 +389,7 @@
         </main>
     </div>
 
+    <script src="agroskor-rules.js"></script>
     <script src="sensor.js"></script>
 </body>
 </html>

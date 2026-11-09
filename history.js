@@ -183,7 +183,7 @@ function applyAdminState(loginStatus) {
 function loadHistoryData() {
     const tbody = document.getElementById('history-body');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Mengambil data dari server awan...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="text-align: center;">Mengambil data dari server awan...</td></tr>';
     
     database.ref('AgroskorPro/History').limitToLast(200).on('value', (snapshot) => {
         if (!isLoggedIn) return; 
@@ -203,9 +203,10 @@ function loadHistoryData() {
             historyDataArray = dataList;
 
             dataList.forEach((data) => {
+                // Batas kategori sama dengan alat: 80 ke atas optimal, 50 sampai 79 belum optimal
                 let badgeClass = "badge-crit";
-                if (data.score > 80) badgeClass = "badge-good";
-                else if (data.score > 50) badgeClass = "badge-warn";
+                if (data.score >= 80) badgeClass = "badge-good";
+                else if (data.score >= 50) badgeClass = "badge-warn";
 
                 const tr = document.createElement('tr');
                 let timestamp = parseInt(data.lastUpdate);
@@ -214,22 +215,33 @@ function loadHistoryData() {
                 const dateObj = new Date(timestamp);
                 const timeString = dateObj.toLocaleDateString('id-ID') + " - " + dateObj.toLocaleTimeString('id-ID');
 
+                const esc = (v) => String(v === undefined || v === null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+                // Field baru dari firmware v3 (data lama tidak punya, jadi ditampilkan "—")
+                const kosong = '\u2014';
+                const titik = data.id_titik !== undefined ? `#${esc(data.id_titik)}${data.kurang_stabil ? ' <small class="rule-why">kurang stabil</small>' : ''}` : kosong;
+                const labelPh = data.label_ph ? `<small class="rule-why">${esc(data.label_ph)}</small>` : '';
+                const ec = data.ec !== undefined ? esc(data.ec) : kosong;
+                const tindakan = data.tindakan ? `${esc(data.tindakan)}${data.alasan ? `<small class="rule-why">${esc(data.alasan)}</small>` : ''}` : kosong;
+
                 tr.innerHTML = `
                     <td>${timeString}</td>
+                    <td>${titik}</td>
                     <td><strong>${data.score} / 100</strong></td>
-                    <td>${parseFloat(data.ph).toFixed(2).replace('.', ',')}</td>
+                    <td>${parseFloat(data.ph).toFixed(2).replace('.', ',')}${labelPh}</td>
+                    <td>${ec}</td>
                     <td>${data.nitrogen}</td>
                     <td>${data.fosfor}</td>
                     <td>${data.kalium}</td>
                     <td>${parseFloat(data.hum).toFixed(2).replace('.', ',')}%</td>
-                    <td><span class="badge-status ${badgeClass}">${data.status}</span></td>
+                    <td><span class="badge-status ${badgeClass}">${esc(data.status)}</span></td>
+                    <td class="cell-tindakan">${tindakan}</td>
                 `;
                 tbody.appendChild(tr);
             });
             updateChartFilter(currentFilterRange);
 
         } else {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;">Belum ada riwayat. Biarkan alat menyala beberapa menit untuk menyimpan log pertama.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align: center;">Belum ada riwayat. Biarkan alat menyala beberapa menit untuk menyimpan log pertama.</td></tr>';
             renderHistoryChart([]);
         }
     });
@@ -237,12 +249,14 @@ function loadHistoryData() {
 
 function exportHistoryCSV() {
     if(historyDataArray.length === 0) return alert("Belum ada data untuk diunduh!");
-    let csvContent = "data:text/csv;charset=utf-8,Waktu,Skor AI,pH,Nitrogen,Fosfor,Kalium,Suhu,Kelembapan,Status\n";
+    const kutip = (v) => `"${v === undefined || v === null ? '' : String(v).replace(/"/g, '""')}"`;
+    let csvContent = "data:text/csv;charset=utf-8,Waktu,Titik,Skor,pH,Label pH,EC,Nitrogen,Fosfor,Kalium,Suhu,Kelembapan,Status,Kesimpulan,Tindakan,Alasan,Kurang stabil,GPS valid,Lat,Lng\n";
     historyDataArray.forEach(data => {
         let timestamp = parseInt(data.lastUpdate);
         if (timestamp > 1000000000) timestamp = timestamp * 1000; 
         const timeStr = new Date(timestamp).toLocaleString('id-ID').replace(/,/g, '');
-        csvContent += [timeStr, data.score, data.ph, data.nitrogen, data.fosfor, data.kalium, data.temp, data.hum, data.status].join(",") + "\n";
+        csvContent += [timeStr, data.id_titik, data.score, data.ph, data.label_ph, data.ec, data.nitrogen, data.fosfor, data.kalium, data.temp, data.hum, data.status,
+                       data.kesimpulan, data.tindakan, data.alasan, data.kurang_stabil, data.gps_valid, data.lat, data.lng].map(kutip).join(",") + "\n";
     });
     const link = document.createElement("a");
     link.href = encodeURI(csvContent);

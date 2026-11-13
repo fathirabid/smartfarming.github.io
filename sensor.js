@@ -714,7 +714,6 @@
 
                 sessionStorage.setItem("liveCsvBackup", JSON.stringify(historyLogData));
 
-<<<<<<< HEAD
                 // --- DATABASE KEBUTUHAN KOMODITAS ---
                 // MASIH MENGGUNAKAN DATA DUMMY
                 const cropDatabase = [
@@ -898,9 +897,7 @@
                         </div>
                     `;
                 }
-=======
                 renderSistemPakar(data, tahap);
->>>>>>> 7208e15a76a2678da2c4df5fd3f89ec2df877d2f
 
                 feather.replace();
             }

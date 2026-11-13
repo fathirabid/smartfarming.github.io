@@ -163,7 +163,7 @@ function applyAdminState(loginStatus) {
 
 // --- FUNGSI BERSIHKAN CACHE / FORMAT SD CARD JARAK JAUH ---
 function clearCache() {
-    if(confirm("⚠️ PERINGATAN: Seluruh data log sejarah yang tersimpan di memori SD Card alat akan dihapus permanen. Lanjutkan?")) {
+    if(confirm("PERINGATAN: Seluruh data log sejarah yang tersimpan di memori SD Card alat akan dihapus permanen. Lanjutkan?")) {
         database.ref('AgroskorPro/Command/clearLog').set(true)
         .then(() => {
             showToast('success', 'Memori Dibersihkan', 'Perintah format memori telah dikirim ke ESP32.');
@@ -191,47 +191,25 @@ if (!firebase.apps.length) {
 }
 const database = firebase.database();
 
-// --- FUNGSI SIMPAN AMBANG BATAS (THRESHOLD) KE FIREBASE ---
-function saveThresholds(e) {
-    e.preventDefault(); 
-    
-    const nMin = parseInt(document.getElementById('thresh-n').value) || 0;
-    const pMin = parseInt(document.getElementById('thresh-p').value) || 0;
-    const kMin = parseInt(document.getElementById('thresh-k').value) || 0;
-    
-    // Tarik nilai Min dan Max saja
-    const phMin = parseFloat(document.getElementById('thresh-ph').value) || 5.5;
-    const phMax = parseFloat(document.getElementById('thresh-ph-max').value) || 7.0;
-
-    // Kirim ke Firebase
-    database.ref('AgroskorPro/Settings/Thresholds').update({
-        n_min: nMin,
-        p_min: pMin,
-        k_min: kMin, 
-        ph_min: phMin,
-        ph_max: phMax
-        // ph_tol DIHAPUS SAJA
-    }).then(() => {
-        showToast('success', 'Kalibrasi Disimpan', 'Ambang batas berhasil diperbarui.');
-    }).catch((error) => {
-        showToast('error', 'Gagal', error.message);
-    });
+// --- TAMPILKAN AMBANG BATAS SISTEM PAKAR (hanya baca) ---
+// Alat tidak lagi membaca AgroskorPro/Settings/Thresholds. Batas diatur di firmware
+// (agroskor_ai.h) dan dicerminkan di agroskor-rules.js.
+function tampilkanBatas() {
+    const body = document.getElementById('batas-body');
+    if (!body || typeof AGROSKOR_RULES === 'undefined') return;
+    const B = AGROSKOR_RULES.BATAS, D = AGROSKOR_RULES.DOSIS;
+    const f = (x) => String(x).replace('.', ',');
+    const baris = [
+        ["pH ideal bawang merah", `${f(B.PH_MIN)} sampai ${f(B.PH_MAX)}`, "Juknis BPTP Jakarta (2018)"],
+        ["Dolomit jika pH di bawah batas", `${D.DOLOMIT} g per pot`, "Juknis BPTP Jakarta (2018)"],
+        ["Pupuk", `SP-36 ${D.SP36} g saat tanam, NPK ${D.NPK} g umur 14 hari dan 1 bulan`, "Juknis BPTP Jakarta (2018)"],
+        ["EC maksimum", `${B.EC_MAKS} \u00b5S/cm`, "Asumsi tim, mengacu ambang FAO 1,2 dS/m"],
+        ["Kelembapan", `${B.KEL_MIN} sampai ${B.KEL_MAX}%`, "Asumsi tim"],
+        ["Nitrogen, fosfor, kalium (untuk skor)", `${B.N}, ${B.P}, ${B.K} mg/kg`, "Asumsi tim"]
+    ];
+    body.innerHTML = baris.map(r => `<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]}</td></tr>`).join("");
 }
-
-// --- AMBIL DATA TERAKHIR SAAT HALAMAN SETTINGS DIBUKA ---
-database.ref('AgroskorPro/Settings/Thresholds').on('value', (snapshot) => {
-    if(snapshot.exists()) {
-        const data = snapshot.val();
-        if(document.getElementById('thresh-n')) document.getElementById('thresh-n').value = data.n_min;
-        if(document.getElementById('thresh-p')) document.getElementById('thresh-p').value = data.p_min;
-        if(document.getElementById('thresh-k')) document.getElementById('thresh-k').value = data.k_min; 
-        if(document.getElementById('thresh-ph')) document.getElementById('thresh-ph').value = data.ph_min;
-
-        if(document.getElementById('thresh-ph-max')) document.getElementById('thresh-ph-max').value = data.ph_max || 7.0;
-        if(document.getElementById('thresh-hum-min')) document.getElementById('thresh-hum-min').value = data.hum_min || 40;
-        if(document.getElementById('thresh-hum-max')) document.getElementById('thresh-hum-max').value = data.hum_max || 70;
-    }
-});
+document.addEventListener("DOMContentLoaded", tampilkanBatas);
 
 // --- FUNGSI REBOOT JARAK JAUH ---
 function showRebootModal() { document.getElementById('rebootModal').style.display = 'flex'; }

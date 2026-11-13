@@ -3,9 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About Us | Smart Farming Web</title>
+    <title>AGROSKOR &middot; Tentang</title>
 
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#f2eee4">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Crect width='34' height='34' rx='9' fill='%231d1c18'/%3E%3Crect x='8' y='9' width='18' height='3.4' rx='1.7' fill='%23a6c94a'/%3E%3Crect x='8' y='15.3' width='13.5' height='3.4' rx='1.7' fill='%23c98a12'/%3E%3Crect x='8' y='21.6' width='9' height='3.4' rx='1.7' fill='%23b5643c'/%3E%3C/svg%3E">
     <script src="https://unpkg.com/feather-icons"></script>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -15,11 +19,8 @@
 
         <aside class="sidebar">
             <div class="sidebar-content">
-                <a href="index.html" class="logo-link">
-                    <div class="logo">
-                        <span class="icon">🌿</span>
-                        <span class="text">Smart Farming</span>
-                    </div>
+                <a href="index.html" class="logo-link" aria-label="AGROSKOR, ke dasbor">
+                    <div class="logo"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span class="text">AGROSKOR<small>Smart Soil Scoring</small></span></div>
                 </a>
 
                 <div class="datetime-wrapper">
@@ -27,12 +28,12 @@
                     <div id="date">Memuat tanggal...</div>
                 </div>
 
-                <nav>
-                    <a href="index.html"><i data-feather="grid"></i> Dashboard</a>
-                    <a href="history.html"><i data-feather="activity"></i> History</a>
-                    <a href="mapping.html"><i data-feather="map"></i> Mapping</a>
-                    <a href="setting.html"><i data-feather="settings"></i> Settings</a>
-                    <a href="about.html" class="active"><i data-feather="info"></i> About Us</a>
+                <nav aria-label="Navigasi utama">
+                    <a href="index.html"><i data-feather="grid"></i><span>Dasbor</span></a>
+                    <a href="history.html"><i data-feather="activity"></i><span>Riwayat</span></a>
+                    <a href="mapping.html"><i data-feather="map"></i><span>Peta</span></a>
+                    <a href="setting.html"><i data-feather="sliders"></i><span>Pengaturan</span></a>
+                    <a href="about.html" class="active" aria-current="page"><i data-feather="info"></i><span>Tentang</span></a>
                 </nav>
             </div>
 
@@ -44,25 +45,27 @@
                     </button>
                 </div>
                 <div id="admin-view" style="display: none;">
-                    <div class="user-profile">
-                        <div class="avatar"><img src="images/icon-4399701_1280.png" alt="User">
+                    <div class="admin-row">
+                        <div class="user-profile">
+                            <div class="avatar"><img src="images/icon-4399701_1280.png" alt=""></div>
+                            <div class="user-info">
+                                <span class="user-name">Akun Admin</span>
+                                <span class="user-status">Sensor tersambung</span>
+                            </div>
                         </div>
-                        <div class="user-info">
-                            <span class="user-name">Akun Admin</span>
-                            <span class="user-status">Online</span>
-                        </div>
+                        <button onclick="handleLogout()" class="btn-logout" aria-label="Keluar">
+                            <i data-feather="log-out"></i><span>Keluar</span>
+                        </button>
                     </div>
-                    <button onclick="handleLogout()" class="btn-logout">
-                        <i data-feather="log-out"></i><span>Keluar Sistem</span>
-                    </button>
                 </div>
             </div>
 
             <div id="loginModal" class="modal-overlay">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h2>🌿 Admin Login</h2>
-                        <p>Gunakan akun admin untuk akses sistem</p>
+                        <div class="modal-brand"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span>AGROSKOR</span></div>
+                        <h2>Masuk sebagai Admin</h2>
+                        <p>Buka data sensor langsung, riwayat, peta, dan kontrol alat.</p>
                     </div>
                     <form id="loginForm">
                         <div class="input-group">
@@ -80,7 +83,7 @@
                                 </button>
                             </div>
                         </div>
-                        <button type="submit" class="btn-submit">Masuk Sekarang</button>
+                        <button type="submit" class="btn-submit">Masuk</button>
                         <button type="button" onclick="closeLogin()" class="btn-cancel">Batal</button>
                     </form>
                 </div>
@@ -99,9 +102,9 @@
             <div id="logoutModal" class="modal-overlay">
                 <div class="modal-content logout-box">
                     <div class="modal-header">
-                        <div class="icon-warning">⚠️</div>
-                        <h2>Konfirmasi Keluar</h2>
-                        <p>Apakah Anda yakin ingin mengakhiri sesi admin dan keluar dari sistem?</p>
+                        <div class="icon-warning is-crit"><i data-feather="log-out"></i></div>
+                        <h2>Keluar dari sesi admin?</h2>
+                        <p>Pembacaan sensor di layar ini akan berhenti sampai kamu masuk lagi.</p>
                     </div>
                     <div class="modal-footer-btns">
                         <button onclick="confirmLogout()" class="btn-confirm-logout">Ya, Keluar</button>
@@ -121,90 +124,98 @@
         </aside>
 
         <main class="main-content">
+            <a href="index.html" class="mobile-brand" aria-label="AGROSKOR"><svg class="logo-mark" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#1d1c18"/><rect x="8" y="9" width="18" height="3.4" rx="1.7" fill="#a6c94a"/><rect x="8" y="15.3" width="13.5" height="3.4" rx="1.7" fill="#c98a12"/><rect x="8" y="21.6" width="9" height="3.4" rx="1.7" fill="#b5643c"/></svg><span>AGROSKOR</span></a>
             <header class="top-bar">
                 <div class="header-title">
-                    <h1>Tentang Kami</h1>
-                    <p>Dokumentasi Inovasi, Arsitektur Sistem, dan Tim Pengembang AGROSKOR.</p>
+                    <span class="eyebrow">Tentang proyek</span>
+                    <h1>AGROSKOR</h1>
+                    <p>Inovasi, arsitektur sistem, dan tim di balik alat penilai kesuburan tanah ini.</p>
                 </div>
             </header>
 
             <section class="about-us-section">
-                
-                <!-- 1. SEKSI PURWARUPA (NARASI AKADEMIS) -->
+
                 <div class="box prototype-showcase">
                     <div class="proto-text">
-                        <span class="badge-green-soft">Prototipe AGROSKOR</span>
-                        <h3>AGROSKOR (Smart Soil Scoring)</h3>
-                        
-                        <!-- Paragraf 1: Narasi Akademik Aspek Fisis & Komputasi -->
-                        <p>AGROSKOR adalah instrumen <em>Internet of Things</em> (IoT) yang mengintegrasikan komputasi <em>edge</em> melalui mikrokontroler ESP32 Dual-Core untuk memproses data biofisik tanah secara presisi. Sistem ini mengandalkan probe sensor multispektral yang tahan terhadap kondisi cuaca ekstrem untuk mengakuisisi parameter esensial lahan secara <em>real-time</em>, meliputi level makronutrien (Nitrogen, Fosfor, Kalium), derajat keasaman (pH), konduktivitas elektrik (EC), kelembapan, serta fluktuasi suhu lingkungan. Penggunaan protokol komunikasi data industri memastikan fidelitas transmisi yang tinggi menuju infrastruktur <em>cloud</em>.</p>
-                        
-                        <!-- Paragraf 2: Urgensi & Sistem Pakar -->
-                        <p style="margin-top: 15px;">Sebagai manifestasi dari paradigma Pertanian Presisi (<em>Precision Agriculture</em>), AGROSKOR dirancang untuk mengeliminasi metode pemupukan empiris konvensional yang berisiko memicu degradasi lahan. Melalui integrasi kecerdasan buatan pada antarmuka web, sistem secara otomatis mengonversi data mentah menjadi metrik <em>Soil Score</em> komprehensif dan menghasilkan preskripsi ameliorasi lahan yang dikalibrasi secara spesifik sesuai dengan profil komoditas target, sehingga mendukung optimalisasi hasil panen yang berkelanjutan.</p>
+                        <span class="badge-green-soft">Smart Soil Scoring</span>
+                        <h3>Pupuk sesuai kebutuhan tanah, bukan kebiasaan.</h3>
+                        <p class="proto-lead">AGROSKOR menancapkan satu probe ke tanah, membaca delapan parameter sekaligus, lalu mengubahnya jadi skor 0&ndash;100 dan resep dosis pupuk untuk luas lahanmu.</p>
+                        <p>Instrumen <em>Internet of Things</em> ini memakai mikrokontroler ESP32 dual-core sebagai komputasi <em>edge</em>. Probe sensor tahan cuaca membaca Nitrogen, Fosfor, Kalium, pH, daya hantar listrik (EC), kelembapan, suhu, dan salinitas secara <em>real-time</em>, lalu mengirimkannya ke <em>cloud</em>.</p>
+                        <p>Pendekatan pertanian presisi ini menggantikan pemupukan berdasarkan perkiraan yang berisiko merusak lahan. Di dasbor, sistem pakar menerjemahkan data mentah menjadi <em>Soil Score</em> dan preskripsi ameliorasi yang disesuaikan dengan komoditas target.</p>
+                        <div class="proto-stats">
+                            <div><b>8</b><span>parameter tanah per pembacaan</span></div>
+                            <div><b>11</b><span>komoditas siap dicocokkan</span></div>
+                            <div><b>0&ndash;100</b><span>skala skor kesuburan</span></div>
+                        </div>
                     </div>
                     <div class="proto-image-wrapper">
-                        <div class="proto-gallery">
-                            <img src="images/prototype.jpeg" alt="Purwarupa Hardware 1" class="proto-gallery-img">
+                        <img src="images/prototype.jpeg" alt="Purwarupa alat AGROSKOR" class="proto-gallery-img" onerror="this.remove()">
+                        <div class="flow">
+                            <div class="flow-title" id="flow-title">Alur data</div>
+                            <ol aria-labelledby="flow-title">
+                            <li><span class="flow-no">01</span><div><b>Probe NPK 8-in-1</b><span>Membaca hara, pH, EC, suhu, kelembapan, salinitas.</span></div></li>
+                            <li><span class="flow-no">02</span><div><b>ESP32 di lahan</b><span>Menghitung skor &amp; status lahan di perangkat.</span></div></li>
+                            <li><span class="flow-no">03</span><div><b>Firebase Realtime DB</b><span>Data &amp; ambang batas tersinkron lewat Wi-Fi.</span></div></li>
+                            <li><span class="flow-no">04</span><div><b>Dasbor AGROSKOR</b><span>Diagnosis AI, dosis pupuk per m&sup2;, peta, riwayat.</span></div></li>
+                            </ol>
                         </div>
                     </div>
                 </div>
 
-                <!-- 2. SEKSI BARU: ARSITEKTUR HARDWARE -->
-                <div class="about-header" style="margin-top: 60px; margin-bottom: 25px;">
-                    <h2><i data-feather="cpu"></i> Arsitektur Perangkat Keras</h2>
-                    <p>Spesifikasi teknis instrumen pemantauan kesuburan lahan terintegrasi.</p>
-                </div>
-                
-                <div class="parameters-grid" style="margin-bottom: 60px;">
-                    <div class="box param-card" style="text-align: center; padding: 30px 20px;">
-                        <i data-feather="cpu" style="width: 45px; height: 45px; color: var(--primary); margin-bottom: 15px;"></i>
-                        <h4 style="margin: 0 0 10px 0; font-size: 16px;">ESP32 Microcontroller</h4>
-                        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">Pusat komputasi <em>edge</em> dan modul telemetri Wi-Fi terintegrasi untuk transmisi data sensor secara nirkabel ke basis data Firebase.</p>
-                    </div>
-                    <div class="box param-card" style="text-align: center; padding: 30px 20px;">
-                        <i data-feather="radio" style="width: 45px; height: 45px; color: #f39c12; margin-bottom: 15px;"></i>
-                        <h4 style="margin: 0 0 10px 0; font-size: 16px;">Sensor NPK 8-in-1</h4>
-                        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">Probe presisi tinggi berbasis protokol Modbus RS485 untuk akuisisi unsur hara makro dan parameter lingkungan tanah.</p>
-                    </div>
-                    <div class="box param-card" style="text-align: center; padding: 30px 20px;">
-                        <i data-feather="navigation" style="width: 45px; height: 45px; color: #3498db; margin-bottom: 15px;"></i>
-                        <h4 style="margin: 0 0 10px 0; font-size: 16px;">GPS NEO-M8N</h4>
-                        <p style="font-size: 13px; color: #64748b; margin: 0; line-height: 1.6;">Modul geolokasi satelit untuk pencatatan titik koordinat lahan secara <em>real-time</em> pada fitur pemetaan spasial web.</p>
-                    </div>
-                </div>
-
-                <!-- 3. SEKSI PROFIL TIM PENGEMBANG -->
                 <div class="about-header">
-                    <h2><i data-feather="users"></i> Tim Inovator SoilSense</h2>
+                    <h2><span class="sec-no">01</span> Arsitektur perangkat keras</h2>
+                    <p>Tiga komponen inti instrumen di lahan.</p>
+                </div>
+                <div class="box spec-sheet">
+                    <div class="spec-row">
+                        <div class="spec-icon"><i data-feather="cpu"></i></div>
+                        <h4>ESP32 Microcontroller</h4>
+                        <p>Pusat komputasi <em>edge</em> dan telemetri Wi-Fi untuk mengirim data sensor ke Firebase.</p>
+                        <span class="spec-tag">dual-core &middot; Wi-Fi</span>
+                    </div>
+                    <div class="spec-row">
+                        <div class="spec-icon"><i data-feather="radio"></i></div>
+                        <h4>Sensor NPK 8-in-1</h4>
+                        <p>Probe presisi untuk unsur hara makro dan parameter lingkungan tanah.</p>
+                        <span class="spec-tag">Modbus RS485</span>
+                    </div>
+                    <div class="spec-row">
+                        <div class="spec-icon"><i data-feather="navigation"></i></div>
+                        <h4>GPS NEO-M8N</h4>
+                        <p>Mencatat titik koordinat lahan secara <em>real-time</em> untuk fitur pemetaan.</p>
+                        <span class="spec-tag">GNSS</span>
+                    </div>
                 </div>
 
+                <div class="about-header">
+                    <h2><span class="sec-no">02</span> Tim pengembang</h2>
+                </div>
                 <div class="team-grid">
                     <div class="team-card">
                         <div class="team-avatar">
-                            <img src="images/foto fathir dpm.jpeg" alt="Ketua Tim">
+                            <img src="images/foto fathir dpm.jpeg" alt="Faathir Abid Firdaus">
                         </div>
                         <h4>Faathir Abid Firdaus</h4>
-                        <span class="team-role">Project Manager & Hardware</span>
-                        <p>Bertanggung jawab atas perancangan arsitektur IoT dan integrasi kelistrikan sensor presisi.</p>
+                        <span class="team-role">Project manager &amp; hardware</span>
+                        <p>Merancang arsitektur IoT dan integrasi kelistrikan sensor presisi.</p>
                     </div>
                 </div>
             </section>
 
             <!-- FOOTER -->
              <footer class="dashboard-footer">
-                    <div class="footer-content">
-                        <div class="footer-left">
-                            <p>&copy; 2026 <strong>AGROSKOR Team</strong>. All rights reserved.</p>
-                            <span class="version">V 1.0.2 - Prototype Stage</span>
-                        </div>
-                        <div class="footer-right">
-                            <div class="footer-links">
-                                <a href="#"><i data-feather="help-circle"></i> Bantuan</a>
-                                <a href="#"><i data-feather="file-text"></i> Dokumentasi</a>
-                                <a href="https://fathirabid.github.io/soilscoring.github.io/" target="_blank"><i data-feather="github"></i> Repository</a>
-                            </div>
+                <div class="footer-content">
+                    <div class="footer-left">
+                        <p>&copy; 2026 <strong>AGROSKOR</strong> &middot; Smart Soil Scoring</p>
+                        <span class="version">v1.0.2 &middot; prototipe</span>
+                    </div>
+                    <div class="footer-right">
+                        <div class="footer-links">
+                            <a href="about.html"><i data-feather="file-text"></i> Dokumentasi</a>
+                            <a href="https://github.com/fathirabid/smartfarming.github.io" target="_blank" rel="noopener"><i data-feather="github"></i> Repository</a>
                         </div>
                     </div>
+                </div>
             </footer>
         </main>
     </div>

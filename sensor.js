@@ -175,23 +175,34 @@
 
         let historyLogData = JSON.parse(sessionStorage.getItem("liveCsvBackup")) || [];
 
-        // Atur warna bawaan Chart.js untuk mode gelap
-        Chart.defaults.color = '#cbd5e1'; 
-        Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.05)';
+        // Tema grafik: tinta di atas kertas (selaras style.css)
+        Chart.defaults.color = '#6f695c';
+        Chart.defaults.borderColor = '#e0d8c8';
+        Chart.defaults.font.family = "'IBM Plex Mono', ui-monospace, monospace";
+        Chart.defaults.font.size = 11;
+
+        // Satu grafik = satu satuan. Seri NPK memakai palet yang lolos uji buta warna;
+        // besaran tunggal memakai warna brand.
+        const SERIES_NPK = ['#2a78d6', '#eb6834', '#1baf7a'];
+        const SERIES_SINGLE = '#2f5d28';
+        const lineStyle = (color, hidden) => ({
+            borderColor: color, backgroundColor: color, tension: 0.3, borderWidth: 2,
+            pointRadius: 0, pointHoverRadius: 4, pointHoverBorderWidth: 2, pointHoverBorderColor: '#fbf9f4', hidden: hidden
+        });
 
         const multiChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [
-                    { label: 'Nitrogen (N)', data: datasetValues.n, borderColor: '#2ecc71', backgroundColor: '#2ecc71', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'Fosfor (P)', data: datasetValues.p, borderColor: '#e67e22', backgroundColor: '#e67e22', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'Kalium (K)', data: datasetValues.k, borderColor: '#3498db', backgroundColor: '#3498db', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'pH Tanah', data: datasetValues.ph, borderColor: '#f1c40f', backgroundColor: '#f1c40f', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'Suhu (°C)', data: datasetValues.temp, borderColor: '#e74c3c', backgroundColor: '#e74c3c', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'Kelembapan (%)', data: datasetValues.hum, borderColor: '#9b59b6', backgroundColor: '#9b59b6', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'EC (uS/cm)', data: datasetValues.ec, borderColor: '#34495e', backgroundColor: '#34495e', tension: 0.3, borderWidth: 2, pointRadius: 0 },
-                    { label: 'Salinitas (mg/L)', data: datasetValues.salt, borderColor: '#1abc9c', backgroundColor: '#1abc9c', tension: 0.3, borderWidth: 2, pointRadius: 0 }
+                    { label: 'Nitrogen (N)', data: datasetValues.n, ...lineStyle(SERIES_NPK[0], false) },
+                    { label: 'Fosfor (P)', data: datasetValues.p, ...lineStyle(SERIES_NPK[1], false) },
+                    { label: 'Kalium (K)', data: datasetValues.k, ...lineStyle(SERIES_NPK[2], false) },
+                    { label: 'pH Tanah', data: datasetValues.ph, ...lineStyle(SERIES_SINGLE, true) },
+                    { label: 'Suhu (°C)', data: datasetValues.temp, ...lineStyle(SERIES_SINGLE, true) },
+                    { label: 'Kelembapan (%)', data: datasetValues.hum, ...lineStyle(SERIES_SINGLE, true) },
+                    { label: 'EC (µS/cm)', data: datasetValues.ec, ...lineStyle(SERIES_SINGLE, true) },
+                    { label: 'Salinitas (mg/L)', data: datasetValues.salt, ...lineStyle(SERIES_SINGLE, true) }
                 ]
             },
             options: {
@@ -210,21 +221,89 @@
 
                 interaction: { mode: 'index', intersect: false },
                 scales: {
-                    y: { 
-                        beginAtZero: false, 
+                    y: {
+                        beginAtZero: false,
                         grace: '5%',
-                        grid: { color: 'rgba(0,0,0,0.05)' }
+                        border: { display: false },
+                        grid: { color: '#ebe5d8' },
+                        ticks: { padding: 8 }
                     },
-                    x: { grid: { display: false } }
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 8, maxRotation: 0 } }
                 },
                 plugins: {
-                    legend: { 
-                        position: 'bottom',
-                        labels: { boxWidth: 12, padding: 20, font: { size: 11 } }
+                    legend: {
+                        position: 'top',
+                        align: 'start',
+                        labels: {
+                            boxWidth: 10, boxHeight: 10, padding: 16, usePointStyle: true, pointStyle: 'rectRounded',
+                            filter: (item, chartData) => !chartData.datasets[item.datasetIndex].hidden
+                        },
+                        onClick: () => {}
+                    },
+                    tooltip: {
+                        backgroundColor: '#1d1c18', titleColor: '#f2eee4', bodyColor: '#f2eee4',
+                        padding: 10, cornerRadius: 8, boxPadding: 4, usePointStyle: true
                     }
                 }
             }
         });
+
+        // Tab grafik: tampilkan satu besaran (satu satuan) sekaligus
+        const LIVE_CHART_GROUPS = {
+            npk:  { idx: [0, 1, 2], title: 'Nitrogen, Fosfor, Kalium (mg/kg)' },
+            ph:   { idx: [3], title: 'pH tanah' },
+            temp: { idx: [4], title: 'Suhu tanah (°C)' },
+            hum:  { idx: [5], title: 'Kelembapan tanah (%)' },
+            ec:   { idx: [6], title: 'Daya hantar listrik (µS/cm)' },
+            salt: { idx: [7], title: 'Salinitas (mg/L)' }
+        };
+        function setLiveChartGroup(group) {
+            const cfg = LIVE_CHART_GROUPS[group];
+            if (!cfg) return;
+            multiChart.data.datasets.forEach((ds, i) => { ds.hidden = !cfg.idx.includes(i); });
+            multiChart.options.plugins.legend.display = cfg.idx.length > 1;
+            multiChart.update('none');
+            document.querySelectorAll('#live-chart-tabs .filter-btn').forEach(btn => {
+                const on = btn.dataset.group === group;
+                btn.classList.toggle('active', on);
+                btn.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            const titleEl = document.getElementById('live-chart-title');
+            if (titleEl) titleEl.textContent = cfg.title;
+        }
+        setLiveChartGroup('npk');
+
+        // --- Helper tampilan status (warna diatur oleh style.css lewat atribut data-*) ---
+        const DASH = '—';
+        function setConnectionState(state, text) {
+            const wrap = document.getElementById('connection-status');
+            const textEl = document.getElementById('connection-text');
+            const dotEl = document.getElementById('connection-dot');
+            if (wrap) wrap.dataset.state = state;
+            if (textEl) { textEl.innerText = text; textEl.style.color = ''; }
+            if (dotEl) dotEl.className = state === 'online' ? 'dot pulse' : (state === 'offline' ? 'dot offline pulse-offline' : 'dot');
+        }
+        function setHeroState(state, score) {
+            const hero = document.querySelector('.hero-score');
+            if (!hero) return;
+            hero.dataset.state = state;
+            hero.style.background = '';
+            hero.style.setProperty('--score', Math.max(0, Math.min(100, Number(score) || 0)));
+        }
+        function setPhState(phValue, status) {
+            const card = document.querySelector('.ph-card');
+            const label = document.getElementById('ph-status-label');
+            if (label) {
+                label.dataset.status = status ? String(status).toLowerCase() : '';
+                label.style.background = ''; label.style.color = '';
+            }
+            if (!card) return;
+            if (phValue === null) { card.dataset.live = 'false'; return; }
+            card.dataset.live = 'true';
+            // Skala visual pH 3–10
+            const pos = ((parseFloat(phValue) - 3) / 7) * 100;
+            card.style.setProperty('--ph', Math.max(0, Math.min(100, pos)));
+        }
 
         // FUNGSI EKSPOR CSV 
         function downloadCSV() {
@@ -303,66 +382,67 @@
     let connectionInterval; 
     let wasOnline = true; 
 
-    // --- VARIABEL AMBANG BATAS (THRESHOLD) DEFAULT (STANDAR UNIVERSAL) ---
-    // Disamakan persis dengan nilai default Offline di ESP32
-    let batasNitrogen = 30;
-    let batasFosfor   = 20;
-    let batasKalium   = 30;
+    // --- AMBANG BATAS: SAMA PERSIS DENGAN SISTEM PAKAR DI ALAT (agroskor_ai.h) ---
+    // Sumber dan catatan asumsi ada di agroskor-rules.js. Batas tidak lagi diambil
+    // dari halaman Pengaturan, karena alat memakai batas di firmware.
+    const BATAS_ALAT = AGROSKOR_RULES.BATAS;
+    let batasNitrogen = BATAS_ALAT.N;
+    let batasFosfor   = BATAS_ALAT.P;
+    let batasKalium   = BATAS_ALAT.K;
+    let batasPH       = BATAS_ALAT.PH_MIN;
+    let batasPhMax    = BATAS_ALAT.PH_MAX;
+    let batasHumMin   = BATAS_ALAT.KEL_MIN;
+    let batasHumMax   = BATAS_ALAT.KEL_MAX;
 
-    // Rentang pH dan Kelembapan Universal
-    let batasPH       = 5.5; 
-    let batasPhMax    = 7.0; 
-    let batasHumMin   = 40;
-    let batasHumMax   = 70;
+    // --- DATA SENSOR TERKINI (dipakai fitur komoditas) ---
+    let currentSensorData = { ada: false, n: 0, p: 0, k: 0, ph: 0, hum: 0, ec: 0, tahap: null };
 
-    // --- TARIK ATURAN DARI FIREBASE SECARA REAL-TIME ---
-    database.ref('AgroskorPro/Settings/Thresholds').on('value', (snapshot) => {
-        if(snapshot.exists()) {
-            const rules = snapshot.val();
-            if(rules.n_min !== undefined) batasNitrogen = rules.n_min;
-            if(rules.p_min !== undefined) batasFosfor = rules.p_min;
-            if(rules.k_min !== undefined) batasKalium = rules.k_min;
-            if(rules.ph_min !== undefined) batasPH = rules.ph_min;
-            if(rules.ph_max !== undefined) batasPhMax = rules.ph_max;
-        }
-    });
-
-    // --- TAMBAHAN BARU: DATABASE KEBUTUHAN IDEAL TANAMAN ---
-    let currentSensorData = { n: 0, p: 0, k: 0, ph: 0 };
-    
-    // --- HELPER MESIN KONVERSI DOSIS LUAS LAHAN ---
-    function hitungDosisAktual(dosisPerHa) {
-        // HANYA ambil memori yang sudah tersimpan melalui klik tombol
-        let savedLuas = localStorage.getItem("luasLahanTersimpan");
-        let luasM2 = (savedLuas && savedLuas > 0) ? parseFloat(savedLuas) : 10000; 
-        
-        let totalKg = (dosisPerHa / 10000) * luasM2;
-        
-        if (totalKg < 1) {
-            let totalGram = Math.round(totalKg * 1000);
-            return `${totalGram} Gram`; 
-        } else {
-            return `${totalKg % 1 === 0 ? totalKg : totalKg.toFixed(1)} Kg`;
-        }
+    // --- DOSIS PER POT (Juknis BPTP Jakarta 2018) DIKALI JUMLAH POT ---
+    function jumlahPotTersimpan() {
+        const v = parseInt(localStorage.getItem("jumlahPotTersimpan"));
+        return v > 0 ? v : 1;
     }
-    
-    // --- DATABASE KEBUTUHAN IDEAL TANAMAN ---
-    const plantDatabase = {
-        cabai: { nama: "Cabai Merah", n: 120, p: 50, k: 150, phMin: 6.0, phMax: 7.0 },
-        tomat: { nama: "Tomat", n: 100, p: 60, k: 180, phMin: 5.5, phMax: 7.0 },
-        bawang: { nama: "Bawang Merah", n: 80, p: 40, k: 100, phMin: 6.0, phMax: 6.8 },
-        padi: { nama: "Padi Sawah", n: 90, p: 30, k: 70, phMin: 5.5, phMax: 6.5 },
-        jagung: { nama: "Jagung Manis", n: 130, p: 45, k: 110, phMin: 5.8, phMax: 7.0 },
-        singkong: { nama: "Singkong", n: 50, p: 20, k: 80, phMin: 4.5, phMax: 7.5 }, 
-        kopi: { nama: "Kopi", n: 8, p: 12, k: 25, phMin: 5.5, phMax: 6.5, humMin: 40, humMax: 60 },   
+    function formatGram(g) {
+        return g >= 1000 ? `${(g / 1000).toFixed(g % 1000 === 0 ? 0 : 2).replace('.', ',')} kg` : `${Math.round(g)} g`;
+    }
+    function dosisTotal(gramPerPot) {
+        const n = jumlahPotTersimpan();
+        return n === 1 ? `${formatGram(gramPerPot)} per pot` : `${formatGram(gramPerPot)} per pot, total ${formatGram(gramPerPot * n)} untuk ${n} pot`;
+    }
 
-        // --- KOMODITAS BARU (SAYURAN DAUN) ---
-        Bayam: { nama: "Bayam", n: 120, p: 40, k: 130, phMin: 6.0, phMax: 7.0, humMin: 65, humMax: 85 },
-        kangkung: { nama: "Kangkung", n: 100, p: 30, k: 100, phMin: 5.5, phMax: 7.0, humMin: 70, humMax: 95 }, 
-        sawi: { nama: "Sawi (Caisim)", n: 130, p: 45, k: 120, phMin: 6.0, phMax: 7.0, humMin: 60, humMax: 80 },
-        selada: { nama: "Selada", n: 110, p: 40, k: 140, phMin: 6.0, phMax: 7.0, humMin: 65, humMax: 80 }, 
-        kubis: { nama: "Kubis", n: 150, p: 60, k: 180, phMin: 6.0, phMax: 7.5, humMin: 60, humMax: 85 } 
+    // --- CROP LIBRARY: hanya komoditas yang sudah ada rujukannya ---
+    const plantDatabase = {
+        bawang: { nama: "Bawang Merah", phMin: BATAS_ALAT.PH_MIN, phMax: BATAS_ALAT.PH_MAX, humMin: BATAS_ALAT.KEL_MIN, humMax: BATAS_ALAT.KEL_MAX }
     };
+
+    // Ubah daftar aturan yang terpenuhi menjadi langkah tindakan beserta dosis
+    function langkahTindakan(aturan) {
+        const out = [];
+        aturan.forEach(a => {
+            if (a.kode === "R1") out.push({ grup: "Pembenah tanah (koreksi pH)", teks: "Dolomit", dosis: dosisTotal(AGROSKOR_RULES.DOSIS.DOLOMIT), alasan: a.alasan, kode: a.kode });
+            else if (a.kode === "R2") out.push({ grup: "Pembenah tanah (koreksi pH)", teks: "Jangan tambah kapur atau dolomit", dosis: "", alasan: a.alasan, kode: a.kode });
+            else if (a.kode === "R3") out.push({ grup: "Pupuk", teks: "Tunda pemupukan", dosis: "", alasan: a.alasan, kode: a.kode });
+            else if (a.kode === "R4") {
+                out.push({ grup: "Pupuk", teks: "SP-36 saat tanam", dosis: dosisTotal(AGROSKOR_RULES.DOSIS.SP36), alasan: a.alasan, kode: a.kode });
+                out.push({ grup: "Pupuk", teks: "NPK umur 14 hari dan 1 bulan", dosis: dosisTotal(AGROSKOR_RULES.DOSIS.NPK) + " tiap aplikasi", alasan: a.alasan, kode: a.kode });
+            }
+            else if (a.kode === "R5") out.push({ grup: "Manajemen air", teks: "Siram dulu, lalu ukur ulang", dosis: "", alasan: a.alasan, kode: a.kode });
+            else if (a.kode === "R6") out.push({ grup: "Manajemen air", teks: "Tunda penyiraman", dosis: "", alasan: a.alasan, kode: a.kode });
+        });
+        return out;
+    }
+
+    function htmlLangkah(langkah) {
+        const grup = {};
+        langkah.forEach(l => { (grup[l.grup] = grup[l.grup] || []).push(l); });
+        return Object.keys(grup).map(g => `<div class="recom-group"><span class="recom-group-title">${g}</span><ul class="dose-list">${
+            grup[g].map(l => `<li class="dose-v3"><span class="dose-name">${l.teks}</span>${l.dosis ? `<b class="dose-amount">${l.dosis}</b>` : ''}<small class="rule-why">${l.kode}: ${l.alasan}</small></li>`).join("")
+        }</ul></div>`).join("");
+    }
+
+    function kelasTag(kode) {
+        return kode === "R4" ? "good" : (kode === "R2" ? "warn" : "crit");
+    }
 
     // FUNGSI ANALISIS SPESIFIK KOMODITAS - PREMIUM RENDERING 
     function analyzeSpecificPlant() {
@@ -372,9 +452,12 @@
         if(!resultBox) return;
 
         // JIKA GUEST VIEW ATAU SENSOR BELUM AKTIF
-        if (!isLoggedIn || currentSensorData.n === 0) {
+        if (!isLoggedIn || !currentSensorData.ada) {
             resultBox.className = 'cae-result cae-empty-stateGuest';
-            resultBox.innerHTML = `
+            resultBox.innerHTML = isLoggedIn ? `
+                <i data-feather="download"></i>
+                <span>Tancapkan probe ke tanah. Hasil pencocokan muncul setelah alat mengirim bacaan.</span>
+            ` : `
                 <i data-feather="lock"></i>
                 <span>Fitur Analisis Pakar hanya tersedia untuk Admin. Silakan Login.</span>
             `;
@@ -394,66 +477,24 @@
         }
 
         const plant = plantDatabase[selected];
+        if (!plant) return;
         const land = currentSensorData;
-        
-        let lacksCount = 0;
-        let issuesFound = [];
-        let actionInstructions = []; 
+        const inf = AGROSKOR_RULES.inferensi({ ph: land.ph, ec: land.ec, kel: land.hum });
 
-        // --- CEK pH ---
-        if (land.ph < plant.phMin) {
-            let gapPH = (plant.phMin - land.ph).toFixed(1);
-            let dosisHa = gapPH * 2000; 
-            issuesFound.push(`Asiditas Lahan Tinggi (pH ${land.ph})`);
-            actionInstructions.push(`Ameliorasi Tanah: Aplikasikan Kapur Dolomit ±${hitungDosisAktual(dosisHa)} untuk menaikkan ${gapPH} poin pH.`);
-            lacksCount++;
-        } else if (land.ph > plant.phMax) {
-            let gapPH = (land.ph - plant.phMax).toFixed(1);
-            issuesFound.push(`Alkalinitas Lahan Tinggi (pH ${land.ph})`);
-            actionInstructions.push(`Ameliorasi Tanah: Aplikasikan Sulfur pertanian untuk menurunkan ${gapPH} poin pH.`);
-            lacksCount++;
-        }
-
-        // --- CEK KELEMBAPAN (HUMIDITY) ---
-        if (currentSensorData.hum < plant.humMin) {
-            issuesFound.push(`Kelembapan Rendah (${currentSensorData.hum}%) - Risiko Layu`);
-            actionInstructions.push(`Manajemen Irigasi: Segera lakukan penyiraman/pengairan hingga kelembapan mencapai minimal ${plant.humMin}%.`);
-            lacksCount++;
-        } else if (currentSensorData.hum > plant.humMax) {
-            issuesFound.push(`Kelembapan Terlalu Tinggi (${currentSensorData.hum}%) - Risiko Jamur`);
-            actionInstructions.push(`Manajemen Drainase: Perbaiki saluran air/parit untuk membuang genangan dan menurunkan kelembapan.`);
-            lacksCount++;
-        }
-
-        // --- CEK NPK ---
-        if (land.n < plant.n) {
-            let defisit = plant.n - land.n;
-            let dosisHa = (defisit * 2) / 0.46; 
-            issuesFound.push(`Defisit Nitrogen (${defisit} mg/kg)`);
-            actionInstructions.push(`Pemupukan Presisi (N): Aplikasikan pupuk Urea sebanyak ±${hitungDosisAktual(dosisHa)}.`);
-            lacksCount++;
-        }
-        if (land.p < plant.p) {
-            let defisit = plant.p - land.p;
-            let dosisHa = (defisit * 2) / 0.36; 
-            issuesFound.push(`Defisit Fosfor (${defisit} mg/kg)`);
-            actionInstructions.push(`Pemupukan Presisi (P): Aplikasikan pupuk SP-36 sebanyak ±${hitungDosisAktual(dosisHa)}.`);
-            lacksCount++;
-        }
-        if (land.k < plant.k) {
-            let defisit = plant.k - land.k;
-            let dosisHa = (defisit * 2) / 0.60; 
-            issuesFound.push(`Defisit Kalium (${defisit} mg/kg)`);
-            actionInstructions.push(`Pemupukan Presisi (K): Aplikasikan pupuk KCl sebanyak ±${hitungDosisAktual(dosisHa)}.`);
-            lacksCount++;
-        }
+        const issuesFound = inf.aturan.filter(a => a.kode !== "R4").map(a => `${a.kesimpulan} (${a.alasan})`);
+        const lacksCount = issuesFound.length;
+        const actionInstructions = langkahTindakan(inf.aturan)
+            .map(l => `${l.teks}${l.dosis ? `: ${l.dosis}` : ''} <small class="rule-why">${l.kode}: ${l.alasan}</small>`);
+        const catatanSementara = land.tahap === 1 ? '<div class="cae-r-desc"><em>Bacaan alat masih menstabilkan, jadi hasil ini sementara.</em></div>' : '';
 
         // KASUS SUKSES: Tanah 100% Cocok
         if (lacksCount === 0) {
             resultBox.className = 'cae-result cae-success-state';
             resultBox.innerHTML = `
-                <div class="cae-r-title"><i data-feather="check-circle"></i> Lahan Siap Tanam!</div>
-                <div class="cae-r-desc">Kondisi unsur hara dan pH saat ini sudah memenuhi kebutuhan ideal untuk <strong>${plant.nama}</strong>. Anda bisa langsung melakukan penanaman.</div>
+                <div class="cae-r-title"><i data-feather="check-circle"></i> Lahan siap tanam</div>
+                <div class="cae-r-desc">pH ${land.ph.toFixed(2)} masuk rentang ideal <strong>${plant.nama}</strong> (${plant.phMin.toFixed(1)} sampai ${plant.phMax.toFixed(1)}) dan tidak ada masalah kelembapan atau garam. Pupuk mengikuti jadwal Juknis.</div>
+                <div class="cae-expert-plan"><ul class="cae-plan-steps">${actionInstructions.map(step => `<li>${step}</li>`).join("")}</ul></div>
+                ${catatanSementara}
             `;
         } 
 
@@ -461,21 +502,22 @@
         else {
             resultBox.className = 'cae-result cae-warning-state';
             resultBox.innerHTML = `
-                <div class="cae-r-title"><i data-feather="alert-triangle"></i> Tanah Belum Siap untuk ${plant.nama}!</div>
+                <div class="cae-r-title"><i data-feather="alert-triangle"></i> Tanah belum siap untuk ${plant.nama}</div>
                 
                 <div class="cae-issues-found">
-                    <div class="cae-issues-title">Ditemukan Kekurangan:</div>
+                    <div class="cae-issues-title">Hasil sistem pakar</div>
                     <div class="cae-issues-list">
                         ${issuesFound.map(item => `<div class="cae-issue-item"><i data-feather="x"></i> ${item}</div>`).join("")}
                     </div>
                 </div>
 
                 <div class="cae-expert-plan">
-                    <div class="cae-plan-title"><i data-feather="tool"></i> Langkah Perbaikan (Urutan Prioritas):</div>
+                    <div class="cae-plan-title"><i data-feather="tool"></i> Langkah perbaikan, urut prioritas</div>
                     <ul class="cae-plan-steps">
-                        ${actionInstructions.map((step, index) => `<li>Langkah ${index + 1}: ${step}</li>`).join("")}
+                        ${actionInstructions.map(step => `<li>${step}</li>`).join("")}
                     </ul>
                 </div>
+                ${catatanSementara}
             `;
         }
         
@@ -520,6 +562,11 @@
     // Fungsi untuk mulai memindai data (Simulasi Firebase)
     function startSensorMonitoring() {
         if (!isLoggedIn) return;
+
+        // Tampilkan status "menghubungkan" sambil menunggu data pertama
+        setConnectionState('idle', 'Menghubungkan...');
+        const waitDesc = document.getElementById('web-status-desc');
+        if (waitDesc) waitDesc.textContent = "Menunggu data pertama dari alat AGROSKOR di lahan...";
 
         // --- MASA TENGGANG AWAL ---
         const WAKTU_MULAI_PANTAU = Date.now();
@@ -568,41 +615,31 @@
                     wasOnline = true;
                 }
 
-                // Update teks di pojok kanan atas jadi Online
-                const textEl = document.getElementById('connection-text');
-                const dotEl = document.getElementById('connection-dot');
-                if(textEl) { textEl.innerText = "ESP32 Online"; textEl.style.color = "#2ecc71"; }
-                if(dotEl) dotEl.className = "dot pulse";
+                // Indikator koneksi pojok kanan atas
+                setConnectionState('online', 'ESP32 online');
 
-                // --- 2. PERBAIKAN KONFLIK CSS BACKGROUND ---
-                const heroBanner = document.querySelector('.hero-score');
-                if (heroBanner) {
-                    if (data.score > 80) heroBanner.style.background = "#2ecc71"; // Hijau Subur
-                    else if (data.score > 50) heroBanner.style.background = "#f39c12"; // Oranye Sedang
-                    else heroBanner.style.background = "#e74c3c"; // Merah Kritis
-                }
+                // Tahap bacaan dari alat: 0 probe kosong, 1 menstabilkan, 2 siap.
+                // Firmware lama tidak mengirim "tahap", jadi dianggap siap.
+                const tahap = (data.tahap === undefined || data.tahap === null) ? 2 : Number(data.tahap);
+                const kat = AGROSKOR_RULES.kategoriSkor(Number(data.score));
 
-                // Update Angka pH
+                // Warna & penanda skala skor (diatur style.css lewat data-state)
+                if (tahap === 0) setHeroState('offline', 0);
+                else setHeroState(kat.state, data.score);
+
+                // Update Angka pH (label menurut kriteria Balai Penelitian Tanah 2009)
                 const phVal = document.getElementById('val-ph');
                 const phLabel = document.getElementById('ph-status-label');
-                phVal.innerText = parseFloat(data.ph).toFixed(2);
-                phLabel.innerText = data.ph_status;
+                const phNum = parseFloat(data.ph);
+                phVal.innerText = phNum.toFixed(2);
+                phLabel.innerText = tahap === 0 ? "Probe kosong" : AGROSKOR_RULES.labelPh(phNum);
+                setPhState(phNum, tahap === 0 ? '' : AGROSKOR_RULES.statusPhBawang(phNum));
 
-                if(data.ph_status === "ASAM") { phLabel.style.background = "#ffecec"; phLabel.style.color = "#e74c3c"; } 
-                else if(data.ph_status === "NETRAL") { phLabel.style.background = "#eefdf3"; phLabel.style.color = "#27ae60"; } 
-                else { phLabel.style.background = "#e8f4fd"; phLabel.style.color = "#3498db"; }
-
-                document.getElementById('web-score-val').textContent = data.score;
-                document.getElementById('web-score-label').textContent = data.score > 80 ? "Sangat Baik" : (data.score > 50 ? "Cukup" : "Kurang");
+                document.getElementById('web-score-val').textContent = tahap === 0 ? DASH : data.score;
+                document.getElementById('web-score-label').textContent = tahap === 0 ? "Tancapkan probe"
+                    : (tahap === 1 ? "Hasil sementara" : (kat.kode === 2 ? "Sangat baik" : (kat.kode === 1 ? "Cukup" : "Kurang")));
                 document.getElementById('web-status-title').innerText = data.status;
                 document.getElementById('web-status-desc').innerText = data.desc;
-
-                const circle = document.getElementById('score-progress');
-                if(circle) {
-                    circle.setAttribute('stroke-dasharray', `${data.score}, 100`);
-                    circle.style.stroke = "white"; 
-                    circle.style.transition = "stroke-dasharray 1s ease-out, stroke 0.5s ease-in";
-                }
 
                 document.getElementById('val-n').innerText = data.nitrogen;
                 document.getElementById('val-p').innerText = data.fosfor;
@@ -615,17 +652,21 @@
                 // Update Koordinat GPS
                 const latEl = document.getElementById('val-lat');
                 const lngEl = document.getElementById('val-lng');
-                if (latEl) latEl.innerText = (data.lat !== undefined && data.lat !== 0) ? data.lat.toFixed(6) : "Mencari...";
-                if (lngEl) lngEl.innerText = (data.lng !== undefined && data.lng !== 0) ? data.lng.toFixed(6) : "Mencari...";
+                if (latEl) latEl.innerText = (data.lat !== undefined && data.lat !== 0) ? data.lat.toFixed(6) : "mencari sinyal";
+                if (lngEl) lngEl.innerText = (data.lng !== undefined && data.lng !== 0) ? data.lng.toFixed(6) : "mencari sinyal";
 
                 // --- UPDATE VARIABEL GLOBAL UNTUK FITUR KOMODITAS BARU ---
-                currentSensorData.n = data.nitrogen;
-                currentSensorData.p = data.fosfor;
-                currentSensorData.k = data.kalium;
-                currentSensorData.ph = data.ph;
-                currentSensorData.hum = data.kelembapan;
+                currentSensorData.ada = tahap !== 0;
+                currentSensorData.n = Number(data.nitrogen);
+                currentSensorData.p = Number(data.fosfor);
+                currentSensorData.k = Number(data.kalium);
+                currentSensorData.ph = phNum;
+                currentSensorData.hum = Number(data.hum);
+                currentSensorData.ec = Number(data.ec);
+                currentSensorData.tahap = tahap;
                 
-                if(document.getElementById('target-plant')) analyzeSpecificPlant();
+                // Perbarui analisis komoditas setiap data baru masuk (jika tanaman sudah dipilih)
+                if (selectedPlantId !== 'umum') analyzeSpecificPlant();
 
                 // --- KALKULASI STATUS NPK (RENDAH / NORMAL / TINGGI) ---
                 const maksNitrogen = batasNitrogen + 100; 
@@ -652,6 +693,8 @@
                 const timeLabel = new Date().toLocaleTimeString('id-ID', {hour12: false});
                 if (labels.length > 60) { labels.shift(); Object.values(datasetValues).forEach(arr => arr.shift()); }
                 labels.push(timeLabel);
+                const chartEmpty = document.getElementById('live-chart-empty');
+                if (chartEmpty) chartEmpty.hidden = true;
                 datasetValues.n.push(data.nitrogen); datasetValues.p.push(data.fosfor); datasetValues.k.push(data.kalium);
                 datasetValues.ph.push(data.ph); datasetValues.temp.push(data.temp); datasetValues.hum.push(data.hum); datasetValues.ec.push(data.ec); datasetValues.salt.push(data.salinitas);
                 multiChart.update();
@@ -672,7 +715,7 @@
                 sessionStorage.setItem("liveCsvBackup", JSON.stringify(historyLogData));
 
                 // --- DATABASE KEBUTUHAN KOMODITAS ---
-                // MASIH MENGGUNAKAN DATA DUMMY
+                // masih pakai data dummy
                 const cropDatabase = [
                     { name: "Padi Sawah", phMin: 5.5, phMax: 6.5, n: 45, p: 20, k: 30 },
                     { name: "Bawang Merah", phMin: 5.6, phMax: 7.0, n: 80, p: 40, k: 40 },
@@ -730,134 +773,54 @@
                 let warnings = [];
                 let excesses = []; 
 
-                // ==========================================================
-                // ANALISIS DINAMIS MENGGUNAKAN THRESHOLD DARI HALAMAN SETTINGS
-                // ==========================================================
-                
-                // 1. Kalkulasi pH (PEMBENAH TANAH) - Memakai batasPH (Min) dan batasPhMax
-                if (data.ph < batasPH) { 
-                    let gapPH = (batasPH - data.ph).toFixed(1);
-                    // Dosis rasio: ±2000 kg/ha Kapur Dolomit untuk tiap kenaikan 1 poin pH
-                    let dosisHa = gapPH * 2000; 
-                    soilActions.push(`Kapur Dolomit (±${hitungDosisAktual(dosisHa)})`); 
-                    warnings.push(`Asiditas Lahan Tinggi / Sangat Asam (pH ${data.ph})`); 
-                } else if (data.ph > batasPhMax) { 
-                    let gapPH = (data.ph - batasPhMax).toFixed(1);
-                    // Dosis rasio: ±1000 kg/ha Sulfur/Belerang untuk tiap penurunan 1 poin pH
-                    let dosisHa = gapPH * 1000;
-                    soilActions.push(`Belerang / Sulfur Pertanian (±${hitungDosisAktual(dosisHa)})`);
-                    warnings.push(`Alkalinitas Lahan Tinggi / Terlalu Basa (pH ${data.ph})`);
-                }
+    // ==========================================================
+    // TAMPILKAN HASIL SISTEM PAKAR (sama dengan aturan di alat)
+    // ==========================================================
+    function renderSistemPakar(data, tahap) {
+        const analysisList = document.getElementById('ai-analysis-list');
+        const recomText = document.getElementById('ai-recom-text');
+        if (!analysisList || !recomText) return;
+        analysisList.className = 'ai-list';
 
-                // 2. Kalkulasi Kelembapan (MANAJEMEN AIR) - Memakai batasHumMin dan batasHumMax
-                if (data.hum < batasHumMin) { 
-                    waterActions.push(`Segera lakukan irigasi/penyiraman hingga kelembapan >${batasHumMin}%.`); 
-                    warnings.push(`Kekeringan / Kelembapan Rendah (${data.hum}%)`); 
-                } else if (data.hum > batasHumMax) { 
-                    excesses.push(`Genangan / Kelembapan Tinggi (${data.hum}%)`);
-                    // Anda juga bisa menambahkan instruksi drainase jika genangan sangat parah
-                    if (data.hum > (batasHumMax + 10)) {
-                        waterActions.push(`Perbaiki saluran drainase/parit untuk membuang kelebihan air.`);
-                    }
-                }
+        if (tahap === 0) {
+            analysisList.innerHTML = `<li><div class="ai-icon-wrap" style="background: var(--warn-soft); color: var(--warn);"><i data-feather="download"></i></div><div class="ai-text"><strong>Probe belum masuk tanah</strong><br> Tancapkan probe, lalu tunggu sampai bacaan siap.</div></li>`;
+            recomText.innerHTML = '<div class="recom-content is-offline"><span class="recom-title">Belum ada bacaan tanah</span><div class="recom-value">Saran muncul setelah probe ditancapkan dan bacaan siap.</div></div>';
+            return;
+        }
 
-                // 3. Kalkulasi Nitrogen (PUPUK UREA) - Memakai variabel batasNitrogen
-                if (data.nitrogen < batasNitrogen) { 
-                    let defisitN = batasNitrogen - data.nitrogen;
-                    // Konversi Nitrogen ke berat Urea asli (Urea mengandung 46% N)
-                    let dosisHa = (defisitN * 2) / 0.46;
-                    fertActions.push(`Urea (±${hitungDosisAktual(dosisHa)})`); 
-                    warnings.push(`Defisit Nitrogen (-${defisitN} mg/kg)`); 
-                } else if (data.nitrogen > (batasNitrogen * 1.5)) { 
-                    // Toksisitas dinilai jika melampaui batas * 1.5 (Sama dengan ESP32)
-                    excesses.push(`Nitrogen Berlebih`);
-                }
+        const b = AGROSKOR_RULES.dariFirebase(data);
+        const inf = AGROSKOR_RULES.inferensi(b);
+        const cocok = AGROSKOR_RULES.komoditasSesuai(b.ph);
+        const tagSementara = tahap === 1 ? ' <span class="ai-tag warn">sementara</span>' : '';
 
-                // 4. Kalkulasi Fosfor (PUPUK SP-36) - Memakai variabel batasFosfor
-                if (data.fosfor < batasFosfor) { 
-                    let defisitP = batasFosfor - data.fosfor;
-                    // Konversi Fosfor ke berat SP-36 asli (SP-36 mengandung 36% P)
-                    let dosisHa = (defisitP * 2) / 0.36;
-                    fertActions.push(`SP-36 (±${hitungDosisAktual(dosisHa)})`); 
-                    warnings.push(`Defisit Fosfor (-${defisitP} mg/kg)`); 
-                } else if (data.fosfor > (batasFosfor * 1.5)) {
-                    excesses.push(`Fosfor Berlebih`);
-                }
+        const teksKomoditas = cocok.length
+            ? `pH sesuai untuk: ${cocok.map(c => `<span class="ai-tag good">${c.nama}</span>`).join("")}`
+            : `<span class="ai-tag crit">Belum sesuai</span> pH ${b.ph.toFixed(2)} di luar rentang komoditas di crop library.`;
+        const teksDiagnosa = inf.aturan.map(a => `<span class="ai-tag ${kelasTag(a.kode)}">${a.kesimpulan} (${a.alasan})</span>`).join("");
 
-                // 5. Kalkulasi Kalium (PUPUK KCl) - Memakai variabel batasKalium
-                if (data.kalium < batasKalium) { 
-                    let defisitK = batasKalium - data.kalium;
-                    // Konversi Kalium ke berat KCl asli (KCl mengandung 60% K)
-                    let dosisHa = (defisitK * 2) / 0.60;
-                    fertActions.push(`KCl (±${hitungDosisAktual(dosisHa)})`); 
-                    warnings.push(`Defisit Kalium (-${defisitK} mg/kg)`); 
-                } else if (data.kalium > (batasKalium * 1.5)) {
-                    excesses.push(`Kalium Berlebih`);
-                }
+        analysisList.innerHTML = `
+            <li><div class="ai-icon-wrap" style="background: var(--good-soft); color: var(--good);"><i data-feather="target"></i></div><div class="ai-text"><strong>Kesesuaian komoditas</strong>${tagSementara}<br> ${teksKomoditas}</div></li>
+            <li><div class="ai-icon-wrap" style="background: var(--info-soft); color: var(--info);"><i data-feather="cpu"></i></div><div class="ai-text"><strong>Diagnosa sistem pakar</strong>${tagSementara}<br> ${teksDiagnosa}</div></li>
+        `;
 
-                const analysisList = document.getElementById('ai-analysis-list');
-                const recomText = document.getElementById('ai-recom-text');
-                if (analysisList) analysisList.className = 'ai-list'; 
+        if (tahap === 1) {
+            recomText.innerHTML = `
+                <div class="recom-content is-warn">
+                    <span class="recom-title"><i data-feather="clock"></i> Menunggu bacaan siap</span>
+                    <div class="recom-value">Bacaan sensor masih berubah. Decision tree di alat akan menandai kapan bacaan siap, lalu saran akhir muncul di sini.</div>
+                </div>`;
+            return;
+        }
 
-                // SKENARIO 1: TERDAPAT KEKURANGAN ATAU MASALAH pH / AIR
-                if (soilActions.length > 0 || fertActions.length > 0 || waterActions.length > 0) { 
-                    
-                    let finalRecomHTML = "";
-                    
-                    // Tampilkan Pembenah Tanah (pH) jika ada masalah
-                    if (soilActions.length > 0) {
-                        finalRecomHTML += `<div style="margin-bottom:15px;">🪨 <strong style="color:#94a3b8;">Pembenah Tanah (Koreksi pH):</strong><br> <span style="color:#d97706; font-weight:600;">${soilActions.join("<br>")}</span></div>`;
-                    }
-                    // Tampilkan Manajemen Air jika ada masalah
-                    if (waterActions.length > 0) {
-                        finalRecomHTML += `<div style="margin-bottom:15px;">💧 <strong style="color:#94a3b8;">Manajemen Air:</strong><br> <span style="color:#38bdf8; font-weight:600;">${waterActions.join("<br>")}</span></div>`;
-                    }
-                    // Tampilkan Kebutuhan Pupuk jika ada masalah
-                    if (fertActions.length > 0) {
-                        finalRecomHTML += `<div>🌱 <strong style="color:#94a3b8;">Kebutuhan Pupuk Dasar:</strong><br> <span class="highlight" style="display:inline-block; line-height:1.8; margin-top:8px;">+ ${fertActions.join("<br> + ")}</span></div>`;
-                    }
-
-                    analysisList.innerHTML = `
-                        <li><div class="ai-icon-wrap" style="background: rgba(46,204,113,0.1); color: #2ecc71;"><i data-feather="target"></i></div><div class="ai-text"><strong>Rekomendasi Tanam:</strong><br> ${commodityText}</div></li>
-                        <li><div class="ai-icon-wrap" style="background: rgba(231,76,60,0.1); color: #e74c3c;"><i data-feather="alert-triangle"></i></div><div class="ai-text"><strong>Terdeteksi Masalah:</strong><br> Lahan mengalami <strong>${warnings.join(", ")}</strong>.</div></li>
-                    `;
-                    recomText.innerHTML = `
-                        <div class="recom-content">
-                            <span class="recom-title"><i data-feather="zap"></i> Tindakan Korektif Prioritas</span>
-                            <div class="recom-value" style="font-size:14.5px;">${finalRecomHTML}</div>
-                        </div>
-                    `;
-                } 
-                // SKENARIO 2: TIDAK ADA KEKURANGAN, TAPI ADA KONDISI TOKSISITAS / KEBANJIRAN
-                else if (excesses.length > 0) {
-                    analysisList.innerHTML = `
-                        <li><div class="ai-icon-wrap" style="background: rgba(46,204,113,0.1); color: #2ecc71;"><i data-feather="target"></i></div><div class="ai-text"><strong>Rekomendasi Tanam:</strong><br> ${commodityText}</div></li>
-                        <li><div class="ai-icon-wrap" style="background: rgba(243,156,18,0.1); color: #f39c12;"><i data-feather="alert-octagon"></i></div><div class="ai-text"><strong>Kondisi Kritis (Berlebih):</strong><br> Lahan kelebihan unsur/kondisi pada <strong>${excesses.join(", ")}</strong>.</div></li>
-                    `;
-                    recomText.innerHTML = `
-                        <div class="recom-content" style="border-left-color: #f39c12;">
-                            <span class="recom-title" style="color: #f39c12;"><i data-feather="alert-triangle"></i> Peringatan Kondisi Berlebih</span>
-                            <div class="recom-value">Lahan mengalami kondisi berlebih pada: <strong style="color:#f1c40f;">${excesses.join(", ")}</strong>.<br><br>Hentikan pemupukan dan perbaiki tata air (drainase/leaching) untuk mencegah keracunan/pembusukan akar.</div>
-                        </div>
-                    `;
-                } 
-                // SKENARIO 3: SEMUANYA OPTIMAL (SEMPURNA)
-                else {
-                    analysisList.innerHTML = `
-                        <li><div class="ai-icon-wrap" style="background: rgba(46,204,113,0.1); color: #2ecc71;"><i data-feather="check-circle"></i></div><div class="ai-text"><strong>Komoditas Optimal:</strong><br> ${commodityText}</div></li>
-                        <li><div class="ai-icon-wrap" style="background: rgba(52,152,219,0.1); color: #3498db;"><i data-feather="thumbs-up"></i></div><div class="ai-text"><strong>Kondisi Hara:</strong><br> Keseimbangan unsur hara utama (NPK & pH) sangat terjaga.</div></li>
-                    `;
-                    recomText.innerHTML = `
-                        <div class="recom-content" style="border-left-color: #2ecc71;">
-                            <span class="recom-title" style="color: #2ecc71;"><i data-feather="shield"></i> Lahan Optimal</span>
-                            <div class="recom-value">Kondisi pH, Kelembapan, dan unsur hara berada pada rentang ideal.<br><br><strong style="color:#2ecc71; font-size:18px;">Lahan Siap Tanam!</strong><br>Pertahankan kondisi ini tanpa perlu penambahan pupuk dasar maupun amelioran.</div>
-                        </div>
-                    `;
-                }
-
-                feather.replace();
-            }
-        });
+        const langkah = langkahTindakan(inf.aturan);
+        const adaMasalah = inf.aturan.some(a => a.kode !== "R4");
+        recomText.innerHTML = `
+            <div class="recom-content ${adaMasalah ? '' : 'is-good'}">
+                <span class="recom-title"><i data-feather="${adaMasalah ? 'zap' : 'shield'}"></i> ${adaMasalah ? 'Tindakan korektif' : 'Lahan siap tanam'}</span>
+                <div class="recom-value">${htmlLangkah(langkah)}</div>
+                <div class="recom-source">Dosis per pot dari Juknis BPTP Jakarta (2018). Batas EC dan kelembapan masih asumsi tim.</div>
+            </div>
+        `;
     }
 
     // Fungsi untuk memperbarui label status nutrisi dengan warna yang sesuai
@@ -866,15 +829,9 @@
         if(!el) return;
 
         el.innerText = statusText;
-        
-        // Atur warna berdasarkan status 3 arah
-        if(statusText === "NORMAL") {
-            el.style.color = "#2ecc71"; // Hijau (Aman)
-        } else if (statusText === "TINGGI") {
-            el.style.color = "#f39c12"; // Oranye (Berlebih/Toksik)
-        } else {
-            el.style.color = "#e74c3c"; // Merah (Defisit/Rendah)
-        }
+        el.style.color = '';
+        // Warna 3 arah (normal / tinggi / rendah) diatur style.css lewat data-status
+        el.dataset.status = String(statusText).toLowerCase();
     }
 
     // Fungsi Logout (Matikan Scan)
@@ -887,38 +844,31 @@
     
         localStorage.removeItem("adminLoggedIn");
 
-        // Reset Angka Sensor & Skor
+        // Reset Angka Sensor & Skor ("—" = belum ada data, bukan nol)
         const idsToReset = ['val-n', 'val-p', 'val-k', 'val-ph', 'val-temp', 'val-hum', 'val-ec', 'val-salt', 'web-score-val'];
         idsToReset.forEach(id => {
             const el = document.getElementById(id);
-            if(el) el.textContent = "0";
+            if(el) el.textContent = DASH;
         });
 
-        // Reset Label Status NPK & Skor (Kembali ke abu-abu)
+        // Reset Label Status NPK & Skor (kembali netral)
         const labelsToReset = ['n-status-label', 'p-status-label', 'k-status-label', 'web-score-label'];
         labelsToReset.forEach(id => {
             const el = document.getElementById(id);
             if(el) {
                 el.textContent = "Memuat...";
-                el.style.color = "#888"; 
+                el.style.color = '';
+                delete el.dataset.status;
             }
         });
 
-        // Reset Label pH (Kembali ke hijau muda default)
+        // Reset Label pH
         const phLabel = document.getElementById('ph-status-label');
-        if(phLabel) {
-            phLabel.textContent = "Memantau...";
-            phLabel.style.background = "#eefaf2";
-            phLabel.style.color = "#27ae60";
-        }
+        if(phLabel) phLabel.textContent = "Memantau...";
+        setPhState(null, '');
 
-        // --- TAMBAHKAN KODE INI UNTUK MERESET WARNA KOTAK SKOR ---
-        const heroBanner = document.querySelector('.hero-score');
-        if (heroBanner) {
-            // Menghapus warna paksaan JS agar kembali ke warna hijau asli dari CSS
-            heroBanner.style.background = ""; 
-            // ATAU jika masih bandel, paksa jadi hijau dengan: heroBanner.style.background = "#2ecc71";
-        }
+        // Kotak skor kembali ke kondisi netral
+        setHeroState('offline', 0);
 
         // Reset Judul Status Utama
         const titleEl = document.getElementById('web-status-title');
@@ -931,28 +881,15 @@
         const pFill = document.querySelector('.p-fill'); if(pFill) pFill.style.width = "0%";
         const kFill = document.querySelector('.k-fill'); if(kFill) kFill.style.width = "0%";
 
-        // Reset Lingkaran Skor ke 0 dan warnanya ke putih
-        const circle = document.getElementById('score-progress');
-        if(circle) {
-            circle.setAttribute('stroke-dasharray', '0, 100');
-            circle.style.stroke = "white"; 
-        }
-
         // Reset Status Koneksi ke posisi menunggu
-        const textEl = document.getElementById('connection-text');
-        const dotEl = document.getElementById('connection-dot');
-        if(textEl && dotEl) {
-            textEl.innerText = "Menunggu Alat...";
-            textEl.style.color = "#666";
-            dotEl.className = "dot"; 
-        }
+        setConnectionState('idle', 'Menunggu alat...');
 
         // Reset Kotak AI dan Rekomendasi
         const analysisList = document.getElementById('ai-analysis-list');
-        if(analysisList) analysisList.innerHTML = '<li>Memuat analisis lahan...</li>';
-        
+        if(analysisList) analysisList.innerHTML = '<li><div class="ai-text">Masuk sebagai admin untuk melihat diagnosis lahan.</div></li>';
+
         const recomText = document.getElementById('ai-recom-text');
-        if(recomText) recomText.textContent = "Menunggu kalkulasi dari sensor...";
+        if(recomText) recomText.innerHTML = '<p class="empty-note">Menunggu kalkulasi dari sensor...</p>';
 
         // Hapus backup memori CSV saat logout
         sessionStorage.removeItem("liveCsvBackup");
@@ -972,6 +909,8 @@
         if(typeof multiChart !== 'undefined') {
             multiChart.update();
         }
+        const chartEmpty = document.getElementById('live-chart-empty');
+        if (chartEmpty) chartEmpty.hidden = false;
         
         showToast('success', 'Logout Berhasil', 'Koneksi sensor diputus.');
 
@@ -984,12 +923,15 @@
 
     // --- AUTO-LOGIN & PEMULIHAN MEMORI SAAT HALAMAN DI-REFRESH ---
     document.addEventListener("DOMContentLoaded", () => {
-        // 1. KUNCI UTAMA: Langsung reset ke status Offline
+        // 1. Pemulihan status login lebih dulu, agar teks kondisi kosong sesuai peran
+        const restoredLogin = localStorage.getItem("adminLoggedIn") === "true";
+        if (restoredLogin) isLoggedIn = true;
+
+        // 2. KUNCI UTAMA: Langsung reset ke status Offline
         resetDataToZero(); 
 
-        // 2. Pemulihan Login
-        if (localStorage.getItem("adminLoggedIn") === "true") {
-            isLoggedIn = true;
+        // 3. Pemulihan Login
+        if (restoredLogin) {
             document.getElementById('guest-view').style.display = 'none';
             document.getElementById('admin-view').style.display = 'block';      
             
@@ -1000,55 +942,52 @@
 
 // FUNGSI UNTUK MERESET DATA SAAT ESP32 OFFLINE / DATA USANG
 function resetDataToZero() {
-    // 1. Matikan Teks Indikator Atas
-    const textEl = document.getElementById('connection-text');
-    const dotEl = document.getElementById('connection-dot');
-    if(textEl) { textEl.innerText = "ESP32 Offline"; textEl.style.color = "#e74c3c"; }
-    if(dotEl) dotEl.className = "dot offline pulse-offline";
+    // 1. Indikator atas: offline
+    setConnectionState('offline', 'ESP32 offline');
 
-    // 2. MATIKAN WARNA KOTAK BANNER UTAMA (JADI ABU-ABU)
-    const heroBanner = document.querySelector('.hero-score');
-    if (heroBanner) heroBanner.style.background = "#94a3b8"; 
+    // 2. Kotak skor ke kondisi netral
+    setHeroState('offline', 0);
 
-    // 3. Nol-kan Semua Angka Sensor
-    const idsToReset = ['val-n', 'val-p', 'val-k', 'val-ph', 'val-temp', 'val-hum', 'val-ec', 'web-score-val'];
+    // 3. Kosongkan angka sensor ("—" = tidak ada data, bukan nol)
+    const idsToReset = ['val-n', 'val-p', 'val-k', 'val-ph', 'val-temp', 'val-hum', 'val-ec', 'val-salt', 'web-score-val'];
     idsToReset.forEach(id => {
         const el = document.getElementById(id);
-        if(el) el.textContent = "0";
+        if(el) el.textContent = DASH;
     });
 
-    // 4. Reset Label Status NPK & Skor jadi Abu-abu
+    // 4. Label status NPK & skor jadi netral
     const labelsToReset = ['n-status-label', 'p-status-label', 'k-status-label', 'web-score-label'];
     labelsToReset.forEach(id => {
         const el = document.getElementById(id);
-        if(el) { el.textContent = "Offline"; el.style.color = "#888"; }
-    });         
+        if(el) { el.textContent = "Offline"; el.style.color = ''; delete el.dataset.status; }
+    });
 
     const phLabel = document.getElementById('ph-status-label');
-    if(phLabel) { phLabel.textContent = "Offline"; phLabel.style.background = "#f0f0f0"; phLabel.style.color = "#888"; }
+    if(phLabel) phLabel.textContent = "Offline";
+    setPhState(null, '');
 
     // reset titik koordinat GPS
     const latEl = document.getElementById('val-lat');
-    if(latEl) latEl.textContent = "Offline";
+    if(latEl) latEl.textContent = DASH;
     const lngEl = document.getElementById('val-lng');
-    if(lngEl) lngEl.textContent = "Offline";
+    if(lngEl) lngEl.textContent = DASH;
 
-    // 5. Kosongkan Progress Bar NPK & Lingkaran Skor
+    // 5. Kosongkan Progress Bar NPK
     const nFill = document.querySelector('.n-fill'); if(nFill) nFill.style.width = "0%";
     const pFill = document.querySelector('.p-fill'); if(pFill) pFill.style.width = "0%";
     const kFill = document.querySelector('.k-fill'); if(kFill) kFill.style.width = "0%";
-    const circle = document.getElementById('score-progress');
-    if(circle) { circle.setAttribute('stroke-dasharray', '0, 100'); circle.style.stroke = "#eee"; }
 
     // 6. Reset Judul Banner Utama & Kotak Analisis AI
     const titleEl = document.getElementById('web-status-title');
-    if(titleEl) titleEl.textContent = "Sensor Terputus";
+    if(titleEl) titleEl.textContent = "Sensor belum mengirim data";
     const descEl = document.getElementById('web-status-desc');
-    if(descEl) descEl.textContent = "Menunggu alat dinyalakan...";
+    if(descEl) descEl.textContent = isLoggedIn
+        ? "Nyalakan alat AGROSKOR di lahan. Skor muncul otomatis begitu data pertama masuk."
+        : "Masuk sebagai admin untuk mulai membaca sensor dari lahan.";
     const analysisList = document.getElementById('ai-analysis-list');
-    if(analysisList) analysisList.innerHTML = '<li style="background:transparent; border:none;"><div class="ai-text" style="color:#888;">Menunggu transmisi data...</div></li>';
+    if(analysisList) analysisList.innerHTML = '<li><div class="ai-text">Menunggu transmisi data dari sensor&hellip;</div></li>';
     const recomText = document.getElementById('ai-recom-text');
-    if(recomText) recomText.innerHTML = '<div class="recom-content" style="border-left-color:#888;"><span class="recom-title">Status: Offline</span><div class="recom-value" style="color:#888;">Menunggu kalkulasi...</div></div>';
+    if(recomText) recomText.innerHTML = '<div class="recom-content is-offline"><span class="recom-title">Belum ada data</span><div class="recom-value">Dosis muncul setelah sensor terbaca.</div></div>';
 }
 
 // ==========================================================
@@ -1096,7 +1035,7 @@ function evaluasiAlarm() {
         
         // Cek agar tidak spam (muncul berkali-kali)
         if (hasAlertedKritis === false) {
-            showToast('error', '⚠️ PERINGATAN LAHAN KRITIS', 'Skor kesuburan anjlok ke ' + currentScore + '! Segera cek rekomendasi AI.');
+            showToast('error', 'Peringatan: lahan kritis', 'Skor kesuburan anjlok ke ' + currentScore + '! Segera cek rekomendasi AI.');
             hasAlertedKritis = true; 
         }
         
@@ -1128,22 +1067,20 @@ window.addEventListener('load', handleProfilePosition);
 // 2. Jalankan secara REAL-TIME setiap kali ukuran layar ditarik/diubah (resize)
 window.addEventListener('resize', handleProfilePosition);
 
-// FUNGSI UNTUK TOMBOL "TERAPKAN" LUAS LAHAN
+// FUNGSI UNTUK TOMBOL "TERAPKAN" JUMLAH POT
 function konfirmasiLuasLahan() {
-    const inputLuas = document.getElementById('luas-lahan');
-    if (inputLuas && inputLuas.value > 0) {
-        // Kunci angka ke dalam memori
-        localStorage.setItem("luasLahanTersimpan", inputLuas.value);
-        
-        // Beri tahu pengguna bahwa kalkulasi telah berubah
-        showToast('success', 'Luas Lahan Diterapkan', `Kalkulasi dosis pupuk disesuaikan untuk area ${inputLuas.value} m².`);
-        
-        // Panggil ulang fitur Analisis Pakar secara instan
+    const input = document.getElementById('luas-lahan');
+    const n = input ? parseInt(input.value) : 0;
+    if (n > 0) {
+        localStorage.setItem("jumlahPotTersimpan", n);
+        showToast('success', 'Jumlah Pot Diterapkan', `Dosis dihitung untuk ${n} pot.`);
         if (typeof analyzeSpecificPlant === 'function') analyzeSpecificPlant();
-        
-        // (Catatan: Untuk AI General, ia akan otomatis merender ulang dalam max 2 detik 
-        // bersamaan dengan denyut pengiriman data ESP32 berikutnya).
     } else {
-        showToast('error', 'Input Tidak Valid', 'Masukkan angka luas lahan yang benar (lebih dari 0).');
+        showToast('error', 'Input Tidak Valid', 'Masukkan jumlah pot lebih dari 0.');
     }
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+    const input = document.getElementById('luas-lahan');
+    if (input) input.value = jumlahPotTersimpan();
+});
